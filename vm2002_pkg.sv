@@ -20,7 +20,7 @@ package vm2002_pkg;
 	COFFEE	= 3'h4,
 	CHIPS	= 3'h5,
 	BARS	= 3'h6,
-	REDBULL	= 3'h7,
+	REDBULL	= 3'h7
   }
   item_t;
   
@@ -33,7 +33,7 @@ package vm2002_pkg;
 	COST_OF_COFFEE	= 8'h24,	// $2
 	COST_OF_CHIPS	= 8'h15,	// $1.25
 	COST_OF_BARS	= 8'h18,	// $1.50
-	COST_OF_COOKIE	= 8'h21,	// $1.75
+	COST_OF_COOKIE	= 8'h21		// $1.75
   }
   cost_t;
 
@@ -46,7 +46,7 @@ package vm2002_pkg;
 	E = 3'h4,			// Button E selects coffee                       
 	F = 3'h5,			// Button F selects chips                       
 	G = 3'h6,			// Button G selects bars                       
-	H = 3'h7,			// Button H selects cookie                       
+	H = 3'h7			// Button H selects cookie                       
   }
   items_t;
 
