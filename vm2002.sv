@@ -1,6 +1,6 @@
 // RTL Design for vm2002 for Assignment 1
 
-module vm2002(product, status, balance, info, clk, rst, coins, buttons, select, ite, count, cost, valid);
+module vm2002(product, status, balance, info, clk, rst, coins, buttons, select, item, count, cost, valid);
 
 
 // user interface inputs
