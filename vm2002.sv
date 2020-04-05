@@ -2,6 +2,7 @@
 
 module vm2002(product, status, balance, info, clk, rst, coins, buttons, select, item, count, cost, valid);
 
+input clk, rst;
 
 // user interface inputs
 input [1:0] coins; 
