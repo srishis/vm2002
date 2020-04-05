@@ -39,5 +39,9 @@ else begin
 end
 end
 
-// supplier restocking logic
+// TODO: supplier restocking logic
+
+
+// TODO: user access logic
+
 endmodule
