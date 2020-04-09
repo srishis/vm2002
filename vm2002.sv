@@ -20,19 +20,15 @@ output status_t status;
 output logic [15:0] balance;
 output logic [7:0] info;
 
-//internal variables to maintain item count
+//item count
+item_count_struct_t item_count;
 logic [6:0] total_c = '0; //suppose that we can store upto 16 items (16 slots per product) each and we have total of 8 items so 16*8 = 128 max count
-logic [3:0] water_c = '0; 
-logic [3:0] cola_c  = '0; 
-logic [3:0] pepsi_c = '0;
-logic [3:0] fanta_c = '0;
-logic [3:0] coffee_c = '0;
-logic [3:0] chips_c = '0;
-logic [3:0] bars_c  = '0;
-logic [3:0] redbull_c= '0;
+
+//item cost
+cost_struct_t item_cost;
 
 //for maintaining total number of item count
-assign total_c = water_c + cola_c + pepsi_c + fanta_c + coffee_c + chips_c + bars_c + redbull_c;
+assign total_c = item_count.WATER_COUNT + item_count.COLA_COUNT + item_count.PEPSI_COUNT + item_count.FANTA_COUNT + item_count.COFFEE_COUNT + item_count.CHIPS_COUNT + item_count.BARS_COUNT + item_count.COOKIE_COUNT;
 
 // import package
 import vm2002_pkg::*;
@@ -53,39 +49,71 @@ else begin
 end
 end
 
+
+
+//supplier cost resetting logic
+always@(count) begin
+if(valid)begin
+		unique case(item)
+			WATER: 	item_cost.COST_OF_WATER = cost;	
+					
+			COLA:	item_cost.COST_OF_COLA = cost;		
+					
+			PEPSI:	item_cost.COST_OF_PEPSI = cost;	
+					
+			FANTA:	item_cost.COST_OF_FANTA = cost;	
+					
+			COFFEE:	item_cost.COST_OF_COFFEE = cost;		
+				
+			CHIPS:	item_cost.COST_OF_CHIPS = cost;		
+			
+			BARS:	item_cost.COST_OF_BARS = cost;	
+			
+			COOKIE:	item_cost.COST_OF_COOKIE = cost;		
+		endcase
+	end
+else
+	begin
+		item_cost.COST_OF_WATER = item_cost.COST_OF_WATER;						
+		item_cost.COST_OF_COLA = item_cost.COST_OF_COLA ;							
+		item_cost.COST_OF_PEPSI = item_cost.COST_OF_PEPSI;						
+		item_cost.COST_OF_FANTA = item_cost.COST_OF_FANTA;
+		item_cost.COST_OF_COFFEE = item_cost.COST_OF_COFFEE;						
+		item_cost.COST_OF_CHIPS = item_cost.COST_OF_CHIPS;					
+		item_cost.COST_OF_BARS = item_cost.COST_OF_BARS;				
+		item_cost.COST_OF_COOKIE = item_cost.COST_OF_COOKIE;
+	end
+end
+
 //supplier restocking logic
-
-//TODO:what if supplier has to change the cost of any specific product??
-
-//check added if the number of slots available are equal to number of products supplier putting in vm
 always_ff@(posedge clk) begin
 if(valid)begin
-	if(total_c == 8'h80) $display("Vending Machine Full");
+	if(total_c == 8'h80) $display("Vending Machine Full");//check added if the number of slots available are equal to number of products supplier putting in vm
 	else
 	unique case(item)
-		WATER: 	begin	if(water_c + count > 5'h10)$display("Error: Overflow Insufficient slots you can add %0d product ",(16 - water_c));
-						else water_c <= water_c + count;
+		WATER: 	begin	if(item_count.WATER_COUNT + count > 5'h10)$display("Error: Overflow Insufficient slots you can add %0d product ",(16 - item_count.WATER_COUNT));
+						else item_count.WATER_COUNT <= item_count.WATER_COUNT + count;
 				end
-		COLA:	begin	if(cola_c + count > 5'h10)$display("Error: Overflow Insufficient slots you can add %0d product ",(16 - cola_c));
-						else cola_c <= cola_c + count;
+		COLA:	begin	if(item_count.COLA_COUNT + count > 5'h10)$display("Error: Overflow Insufficient slots you can add %0d product ",(16 - item_count.COLA_COUNT));
+						else item_count.COLA_COUNT <= item_count.COLA_COUNT + count;
 				end
-		PEPSI:	begin	if(pepsi_c + count > 5'h10)$display("Error: Overflow Insufficient slots you can add %0d product ",(16 - pepsi_c));
-						else pepsi_c <= pepsi_c + count;
+		PEPSI:	begin	if(item_count.PEPSI_COUNT + count > 5'h10)$display("Error: Overflow Insufficient slots you can add %0d product ",(16 - item_count.PEPSI_COUNT));
+						else item_count.PEPSI_COUNT <= item_count.PEPSI_COUNT + count;
 				end
-		FANTA:	begin	if(fanta_c + count > 5'h10)$display("Error: Overflow Insufficient slots you can add %0d product ",(16 - fanta_c));
-						else fanta_c <= fanta_c + count;
+		FANTA:	begin	if(item_count.FANTA_COUNT + count > 5'h10)$display("Error: Overflow Insufficient slots you can add %0d product ",(16 - item_count.FANTA_COUNT));
+						else item_count.FANTA_COUNT <= item_count.FANTA_COUNT + count;
 				end
-		COFFEE:	begin	if(coffee_c + count > 5'h10)$display("Error: Overflow Insufficient slots you can add %0d product ",(16 - coffee_c));
-						else coffee_c <= coffee_c + count;
+		COFFEE:	begin	if(item_count.COFFEE_COUNT + count > 5'h10)$display("Error: Overflow Insufficient slots you can add %0d product ",(16 - item_count.COFFEE_COUNT));
+						else item_count.COFFEE_COUNT <= item_count.COFFEE_COUNT + count;
 				end
-		CHIPS:	begin	if(chips_c + count > 5'h10)$display("Error: Overflow Insufficient slots you can add %0d product ",(16 - chips_c));
-						else chips_c <= chips_c + count;
+		CHIPS:	begin	if(item_count.CHIPS_COUNT + count > 5'h10)$display("Error: Overflow Insufficient slots you can add %0d product ",(16 - item_count.CHIPS_COUNT));
+						else item_count.CHIPS_COUNT <= item_count.CHIPS_COUNT + count;
 				end
-		BARS:	begin	if(bars_c + count > 5'h10)$display("Error: Overflow Insufficient slots you can add %0d product ",(16 - bars_c));
-						else bars_c <= bars_c + count;
+		BARS:	begin	if(item_count.BARS_COUNT + count > 5'h10)$display("Error: Overflow Insufficient slots you can add %0d product ",(16 - item_count.BARS_COUNT));
+						else item_count.BARS_COUNT <= item_count.BARS_COUNT + count;
 				end
-		REDBULL:begin	if(redbull_c + count > 5'h10)$display("Error: Overflow Insufficient slots you can add %0d product ",(16 - redbull_c));
-						else redbull_c <= redbull_c + count;
+		COOKIE:begin	if(item_count.COOKIE_COUNT + count > 5'h10)$display("Error: Overflow Insufficient slots you can add %0d product ",(16 - item_count.COOKIE_COUNT));
+						else item_count.COOKIE_COUNT <= item_count.COOKIE_COUNT + count;
 				end	
 	endcase
 else
