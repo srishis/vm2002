@@ -52,7 +52,7 @@ end
 
 
 //supplier cost resetting logic
-always@(count) begin
+always@(cost) begin
 if(valid)begin
 		unique case(item)
 			WATER: 	item_cost.COST_OF_WATER = cost;	
