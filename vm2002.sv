@@ -254,7 +254,24 @@ cost_struct_t cost_reg;
   					end	// end of RESTOCK case
   				
   	state[DISPENSE_ITEM_INDEX]  : begin 
-  	 				product = item;
+  	 				//product = item;
+  	 				unique case(buttons_t)
+  						A : product  = WATER;	
+  					
+  						B :	product  = COLA;		
+  					
+  						C :	product  = PEPSI;	
+  					
+  						D :	product  = FANTA;	
+  					
+  						E :	product  = COFFEE;		
+  					
+  						F :	product  = CHIPS;		
+  			
+  						G :	product  = BARS;	
+  			
+  						//H:	product  = COOKIE;	
+  					  endcase	
   				      end	
   
   	endcase // FSM output logic case
