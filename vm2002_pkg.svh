@@ -18,7 +18,7 @@ package vm2002_pkg;
   logic amount;
   logic insert_coins;
 
-  // enum for items in the vending machine
+  // enum for items/product in the vending machine
   typedef enum logic [2:0] {
 	WATER	= 3'h1,		
   	COLA	= 3'h2,	
@@ -61,7 +61,7 @@ package vm2002_pkg;
 	A = 3'h1,			// Button A selects water			
   	B = 3'h2,			// Button B selects cola 			
   	C = 3'h3,			// Button C selects pepsi                       
-  	D = 3'h4,		status_t = ERROR;	status_t = ERROR;		// Button D selects fanta                       
+  	D = 3'h4,		        // Button D selects fanta                       
 	E = 3'h5,			// Button E selects coffee                       
 	F = 3'h6,			// Button F selects chips                       
 	G = 3'h7,			// Button G selects bars                       
@@ -72,7 +72,7 @@ package vm2002_pkg;
 	AVAILABE      = 2'h1,
 	OUT_OF_STOCK  = 2'h2,
 	ERROR	      = 2'h3,
-	NO_STATUS = 2'h0	
+	NO_STATUS     = 2'h0	
   } status_t;
 
   // Indices for FSM states in Vending machine for bug free state logic 
