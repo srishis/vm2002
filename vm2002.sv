@@ -36,7 +36,7 @@ cost_struct_t cost_reg;
   assign coins_t   = coins;
   assign buttons_t = buttons;
   assign item_t    = items;
-  assign status_t  = status;
+  assign status  = status_t;
 
 // initial condition
   always_ff@(posedge clk) begin
@@ -44,7 +44,7 @@ cost_struct_t cost_reg;
   	product	<= '0;
   	status 	<= '0;
   	balance <= '0;
-  	info	<= '0;
+  	info	  <= '0;
   	state   <= IDLE;
   	timer   <= '1;		// set timer to max value for down count
   end
@@ -53,7 +53,7 @@ cost_struct_t cost_reg;
   	product	<= product;
   	status 	<= status;
   	balance <= balance;
-  	info	<= info;
+  	info	  <= info;
   	state   <= next_state;
   	timer   <= timer;		
   end
@@ -301,9 +301,9 @@ cost_struct_t cost_reg;
   	state[INSERT_COINS_INDEX]     : begin 
   					if(coins && !insert_coins)			next_state = CHECK_BALANCE;
   					// wait for coins till timeout 
-  					else if(!coins || !timeout)			next_state = INSERT_COINS;
+      else if(!coins && !timeout)			next_state = INSERT_COINS;
   					// if no coins inserted and timeout occurs, go back to IDLE
-  					else if(!coins || timeout || status_t == ERROR)	next_state = IDLE;
+      else if(!coins && timeout || status_t == ERROR)	next_state = IDLE;
   					end
   
   	state[CHECK_BALANCE]          : begin 
