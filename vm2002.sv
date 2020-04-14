@@ -332,7 +332,7 @@ end
   
        state[RESTOCK_INDEX]	      : begin
   					if(!valid)	next_state = IDLE;
-  					else			next_state = RESTOCK;
+  					else		next_state = RESTOCK;
   					end
   	
       state[DISPENSE_ITEM_INDEX]      : begin
