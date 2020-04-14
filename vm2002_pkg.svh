@@ -15,10 +15,6 @@ package vm2002_common_pkg;
   }
   coins_t;
   
-  // this variable holds the total amount inserted by the user through coins
-  logic amount;
-  logic insert_coins;
-
   // enum for items/product in the vending machine
   typedef enum logic [2:0] {
 	WATER	= 3'h1,		
