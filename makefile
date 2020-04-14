@@ -5,16 +5,16 @@ setup:
 		vmap work work
 
 compile:
-		vlog vm2002_pkg.sv vm2002.sv vm2002_tb.sv 
-		vopt top -o top_optimized  +acc +cover=sbfec
+		vlog vm2002_pkg.svh vm2002.sv vm2002_tb.sv 
+		 
 		
 run:
-		vsim top_optimized -coverage
+		vsim vm2002_tb -coverage &
 		log /* -r
 		run -all
-		coverage save vm_2002.ucdb
-		vcover report vm_2002.ucdb 
-		vcover report vm_2002.ucdb -cvg -details
+		#coverage save vm_2002.ucdb
+		#vcover report vm_2002.ucdb 
+		#vcover report vm_2002.ucdb -cvg -details
 		
 quit: 
 		quit -sim
