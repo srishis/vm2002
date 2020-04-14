@@ -26,6 +26,9 @@ output logic [7:0] info;
 import vm2002_common_pkg::*;
 
 // internal variables
+// this variable holds the total amount inserted by the user through coins
+logic amount;
+logic insert_coins;
 logic [8:0] timer;				// 9 bit down counter which counts 512 clocks
 logic start_timer;				// control signal for internal timer	
 logic [15:0] prev_balance;
