@@ -2,8 +2,9 @@
 
 `ifndef VM2002_PKG
 `define VM2002_PKG
+`endif
 
-package vm2002_pkg;
+package vm2002_common_pkg;
 
   // enum for acceptable coins
   typedef enum logic [1:0] {
@@ -26,13 +27,13 @@ package vm2002_pkg;
   	FANTA	= 3'h4,	
 	COFFEE	= 3'h5,	
 	CHIPS	= 3'h6,	
-	BARS	= 3'h7,	
+	BARS	= 3'h7	
 	//COOKIE	= 3'h7		
   } item_t;
 
   // struct for item count register in the vending machine
   // setting all items default count to avg value 8
-  typedef struct packed {
+  typedef struct {
 	logic [2:0] WATER_COUNT	 = 3'h8;
   	logic [2:0] COLA_COUNT	 = 3'h8;
   	logic [2:0] PEPSI_COUNT	 = 3'h8;
@@ -44,7 +45,7 @@ package vm2002_pkg;
   } item_count_struct_t;
   
   // struct for item costs register in the vending machine
-  typedef struct packed {
+  typedef struct {
 	logic [7:0] COST_OF_WATER	= 8'h6;		// $0.50 
   	logic [7:0] COST_OF_COLA	= 8'h12;	// $1
   	logic [7:0] COST_OF_PEPSI	= 8'h12;	// $1
@@ -64,7 +65,7 @@ package vm2002_pkg;
   	D = 3'h4,		        // Button D selects fanta                       
 	E = 3'h5,			// Button E selects coffee                       
 	F = 3'h6,			// Button F selects chips                       
-	G = 3'h7,			// Button G selects bars                       
+	G = 3'h7			// Button G selects bars                       
   } buttons_t;
 
   // enum for product availability status
@@ -78,26 +79,24 @@ package vm2002_pkg;
   // Indices for FSM states in Vending machine for bug free state logic 
   typedef enum {
 	IDLE_INDEX             = 0,
-	USER_INDEX             = 1,
-	RESTOCK_INDEX          = 2,
-	CHECK_ITEM_COUNT_INDEX = 3,
-	CHECK_STATUS_INDEX     = 4,
-	INSERT_COINS_INDEX     = 5,
-	CHECK_BALANCE_INDEX    = 6,
-	END_TRANSACTION_INDEX  = 7
+	RESTOCK_INDEX          = 1,
+	CHECK_ITEM_COUNT_INDEX = 2,
+	INSERT_COINS_INDEX     = 3,
+	CHECK_BALANCE_INDEX    = 4,
+	DISPENSE_ITEM_INDEX    = 5 
+	//SOFT_RESET             = 6 
   } state_index;
 
   // one hot FSM states for Vending machine
-  typedef enum logic [7:0] {
-	IDLE             = 8'b0000_0001 << IDLE_INDEX,
-	USER             = 8'b0000_0001 << USER_INDEX,
-	RESTOCK          = 8'b0000_0001 << RESTOCK_INDEX,
-	CHECK_ITEM_COUNT = 8'b0000_0001 << CHECK_ITEM_COUNT_INDEX,
-	CHECK_STATUS     = 8'b0000_0001 << CHECK_STATUS_INDEX,
-	INSERT_COINS     = 8'b0000_0001 << INSERT_COINS_INDEX,
-	CHECK_BALANCE    = 8'b0000_0001 << CHECK_BALANCE_INDEX,
-	DISPENSE_ITEM    = 8'b0000_0001 << DISPENSE_ITEM_INDEX
-  } state, next_state; 
+  typedef enum logic [5:0] {
+	IDLE             = 6'b000001 << IDLE_INDEX,
+	RESTOCK          = 6'b000001 << RESTOCK_INDEX,
+	CHECK_ITEM_COUNT = 6'b000001 << CHECK_ITEM_COUNT_INDEX,
+	INSERT_COINS     = 6'b000001 << INSERT_COINS_INDEX,
+	CHECK_BALANCE    = 6'b000001 << CHECK_BALANCE_INDEX,
+	DISPENSE_ITEM    = 6'b000001 << DISPENSE_ITEM_INDEX
+	//SOFT_RESET       = 7'b0000001 << SOFT_RESET_INDEX
+  } fsm_state_t; 
 
 endpackage
 
