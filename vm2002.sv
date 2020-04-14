@@ -331,7 +331,7 @@ end
   					end
   
        state[RESTOCK_INDEX]	      : begin
-  					if(!valid || srst)	next_state = IDLE;
+  					if(!valid)	next_state = IDLE;
   					else			next_state = RESTOCK;
   					end
   	
