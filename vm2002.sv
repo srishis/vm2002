@@ -39,10 +39,7 @@ coins_t coin;
 buttons_t button;
 item_t items;
 status_t stat;
-//assign coin   = coins;
-//assign button = buttons;
-//assign items  = item;
-//assign status = stat;
+
 always_comb begin
 $cast(coin, coins);
 $cast(button, buttons);
@@ -68,29 +65,6 @@ end
   prev_amount  <= amount;
   end
 
-  /*
-  task soft_reset();
-	// on soft reset, maintain balance, timer, inventory and cost of item
-  	amount 		  	  = amount;
-	item_reg.WATER_COUNT      = item_reg.WATER_COUNT;
-	item_reg.COLA_COUNT       = item_reg.COLA_COUNT;
-	item_reg.PEPSI_COUNT      = item_reg.PEPSI_COUNT;
-	item_reg.FANTA_COUNT      = item_reg.FANTA_COUNT;
-	item_reg.COFFEE_COUNT     = item_reg.COFFEE_COUNT;
-	item_reg.CHIPS_COUNT      = item_reg.CHIPS_COUNT;
-	item_reg.BARS_COUNT       = item_reg.BARS_COUNT;
-	//item_reg.COOKIE_COUNT   = item_reg.COOKIE_COUNT;
-	cost_reg.COST_OF_WATER    = cost_reg.COST_OF_WATER;						
-  	cost_reg.COST_OF_COLA     = cost_reg.COST_OF_COLA;							
-  	cost_reg.COST_OF_PEPSI    = cost_reg.COST_OF_PEPSI;				
-  	cost_reg.COST_OF_FANTA    = cost_reg.COST_OF_FANTA;
-   	cost_reg.COST_OF_COFFEE   = cost_reg.COST_OF_COFFEE;						
-        cost_reg.COST_OF_CHIPS    = cost_reg.COST_OF_CHIPS;					
-        cost_reg.COST_OF_BARS     = cost_reg.COST_OF_BARS;				
-        //cost_reg.COST_OF_COOKIE = cost_reg.COST_OF_COOKIE;
-  end
-  endtask // soft_reset
-  */
 
 // watchdog timer logic using down counter
   assign timeout = (timer == '0) ? 1 : 0;
@@ -172,12 +146,7 @@ end
   						else
   						status = OUT_OF_STOCK;
   						end
-  					//if(button == H)	// COOKIE
-  					//H:	begin
-  					//	if(COOKIE_COUNT != 0)
-  					//	status = AVAILABE;
-  					//	else
-  					//	status = OUT_OF_STOCK;
+  				
   					
   					endcase
   
@@ -195,7 +164,7 @@ end
 					//else amount = 0;			
 					// make insert coins control signal low
 					balance = '0;
-					//insert_coins = 1'b0;
+					
 					end
 					  
   
@@ -230,10 +199,7 @@ end
   					  if(amount > cost_reg.COST_OF_BARS)	        balance = amount - cost_reg.COST_OF_BARS;
   					  else if (amount < cost_reg.COST_OF_BARS)	insufficient_amount = 1'b1;
   					  else 					        balance = 0;
-  					//if(button == H)	// COOKIE
-  					//if(amount > cost_reg.COST_OF_COOKIE)	       balance = amount - cost_reg.COST_OF_COOKIE;
-  					//if(amount > cost_reg.COST_OF_COOKIE)         stat = ERROR;	
-  					//else 					       balance = 0;
+  			
   					end
   
           state[RESTOCK_INDEX]	      : begin
@@ -267,10 +233,7 @@ end
   							  if(item_reg.BARS_COUNT + count > 5'h10)	stat = ERROR;
   							  else 						item_reg.BARS_COUNT = item_reg.BARS_COUNT + count;
   							end
-  					//	COOKIE: begin	
-  					//		  if(item_reg.COOKIE_COUNT + count > 5'h10)	stat = ERROR;
-  					//		  else item_reg.COOKIE_COUNT = item_reg.COOKIE_COUNT + count;
-  			   		//		end	
+  					
   					  endcase
   					// update the cost of items
   					if(cost)
@@ -289,7 +252,7 @@ end
   			
   						BARS  :	cost_reg.COST_OF_BARS   = cost;	
   			
-  						//COOKIE:	cost_reg.COST_OF_COOKIE = cost;		
+  							
   					  endcase
   					else begin
   					  cost_reg.COST_OF_WATER  = cost_reg.COST_OF_WATER;						
@@ -299,7 +262,7 @@ end
   					  cost_reg.COST_OF_COFFEE = cost_reg.COST_OF_COFFEE;						
   					  cost_reg.COST_OF_CHIPS  = cost_reg.COST_OF_CHIPS;					
   					  cost_reg.COST_OF_BARS   = cost_reg.COST_OF_BARS;				
-  					  //cost_reg.COST_OF_COOKIE = cost_reg.COST_OF_COOKIE;
+  					 
   					end
   					end	// end of RESTOCK case
   				
@@ -376,9 +339,7 @@ end
   					next_state = IDLE;
   					end
 
-  //    state[SOFT_RESET_INDEX]         : begin
-  //      				next_state = IDLE;	
-  //					end
+ 
           endcase
   
   end // FSM Next state logic

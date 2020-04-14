@@ -95,7 +95,6 @@ package vm2002_common_pkg;
 	INSERT_COINS     = 6'b000001 << INSERT_COINS_INDEX,
 	CHECK_BALANCE    = 6'b000001 << CHECK_BALANCE_INDEX,
 	DISPENSE_ITEM    = 6'b000001 << DISPENSE_ITEM_INDEX
-	//SOFT_RESET       = 7'b0000001 << SOFT_RESET_INDEX
   } fsm_state_t; 
 
 endpackage
