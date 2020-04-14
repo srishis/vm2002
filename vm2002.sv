@@ -30,6 +30,7 @@ logic insufficient_amount;
 // import package
 import vm2002_pkg::*;
 
+state_t state, next_state;
 item_count_struct_t item_reg;
 cost_struct_t cost_reg;
 
@@ -80,49 +81,63 @@ cost_struct_t cost_reg;
   					//if(buttons_t == A)	// WATER
   					unique case (buttons_t)	// reverse case
   					 A:	begin
-  						if(WATER_COUNT != 0)
+  						if(WATER_COUNT != 0) begin
   						status = AVAILABE;
+						info = cost_reg.COST_OF_WATER;
+						end
   						else
   						status = OUT_OF_STOCK;
   						end
   					//if(buttons_t == B)	// COLA
   					 B:	begin
-  						if(COLA_COUNT != 0)
+  						if(COLA_COUNT != 0)begin
   						status = AVAILABE;
+						info = cost_reg.COST_OF_COLA;
+						end
   						else
   						status = OUT_OF_STOCK;
   						end
   					//if(buttons_t == C)	// PEPSI
   					 C:	begin
-  						if(PEPSI_COUNT != 0)
+  						if(PEPSI_COUNT != 0)begin
   						status = AVAILABE;
+						info = cost_reg.COST_OF_PEPSI;
+						end
   						else
   						status = OUT_OF_STOCK;
   					//if(buttons_t == D)	// FANTA
   					 D:	begin
-  						if(FANTA_COUNT != 0)
+  						if(FANTA_COUNT != 0)begin
   						status = AVAILABE;
+						info = cost_reg.COST_OF_FANTA;
+						end
   						else
   						status = OUT_OF_STOCK;
   						end
   					//if(buttons_t == E)	// COFFEE
   					 E:	begin
-  						if(COFFEE_COUNT != 0)
+  						if(COFFEE_COUNT != 0)begin
   						status = AVAILABE;
+						info = cost_reg.COST_OF_COFFEE;
+						end
   						else
   						status = OUT_OF_STOCK;
   						end
   					//if(buttons_t == F)	// CHIPS
   					 F:	begin
-  						if(CHIPS_COUNT != 0)
+  						if(CHIPS_COUNT != 0)begin
   						status = AVAILABE;
+						info = cost_reg.COST_OF_CHIPS;
+						end
   						else
   						status = OUT_OF_STOCK;
   						end
   					//if(buttons_t == G)	// BARS
   					 G:	begin
-  						if(BARS_COUNT != 0)
+  						if(BARS_COUNT != 0)begin
   						status = AVAILABE;
+						info = cost_reg.COST_OF_BARS;
+						end
   						else
   						status = OUT_OF_STOCK;
   						end
@@ -141,17 +156,17 @@ cost_struct_t cost_reg;
   	state[INSERT_COINS_INDEX]     : begin 
   				    	//if(!cancel)
   				    	start_timer = 1'b1;
-  					if(coins_t == NICKEL)	        amount += 16'h5;	// $0.05
-  					else if (coins_t == DIME)	amount += 16'hA;	// $0.10		
-  					else if (coins_t == QUARTER)	amount += 16'h19;	// $0.25
-  					else				amount = amount;			
-  					//else amount = 0;			
-  					// make insert coins control signal low
-					if(timeout)
-  					insert_coins = 1'b0;
-					else
-					insert_coins =	1'b1;       
-					end
+						while(!select)begin	
+						if(coins_t == NICKEL)	        amount += 16'h5;	// $0.05
+						else if (coins_t == DIME)	amount += 16'hA;	// $0.10		
+						else if (coins_t == QUARTER)	amount += 16'h19;	// $0.25
+						else				amount = amount;			
+						//else amount = 0;			
+						// make insert coins control signal low
+						end
+						insert_coins = 1'b0;
+						  
+						end
   
   	// if(!cancel && !insert_coins)
   	state[CHECK_BALANCE]          : begin 
@@ -228,19 +243,19 @@ cost_struct_t cost_reg;
   					  endcase
   					if(cost)
   					  unique case(item_t)
-  						WATER : item_cost.COST_OF_WATER  = cost;	
+  						WATER : cost_reg.COST_OF_WATER  = cost;	
   					
-  						COLA  :	item_cost.COST_OF_COLA   = cost;		
+  						COLA  :	cost_reg.COST_OF_COLA   = cost;		
   					
-  						PEPSI :	item_cost.COST_OF_PEPSI  = cost;	
+  						PEPSI :	cost_reg.COST_OF_PEPSI  = cost;	
   					
-  						FANTA :	item_cost.COST_OF_FANTA  = cost;	
+  						FANTA :	cost_reg.COST_OF_FANTA  = cost;	
   					
-  						COFFEE:	item_cost.COST_OF_COFFEE = cost;		
+  						COFFEE:	cost_reg.COST_OF_COFFEE = cost;		
   					
-  						CHIPS :	item_cost.COST_OF_CHIPS  = cost;		
+  						CHIPS :	cost_reg.COST_OF_CHIPS  = cost;		
   			
-  						BARS  :	item_cost.COST_OF_BARS   = cost;	
+  						BARS  :	cost_reg.COST_OF_BARS   = cost;	
   			
   						//COOKIE:	item_cost.COST_OF_COOKIE = cost;		
   					  endcase
@@ -315,12 +330,12 @@ cost_struct_t cost_reg;
   					else 				next_state = DISPENSE_ITEM;
   					end
   
-    	state[RESTOCK_INDEX]	      : begin
+    state[RESTOCK_INDEX]	      : begin
   					if(!valid)	next_state = IDLE;
   					else		next_state = RESTOCK;
   					end
   	
-    	state[DISPENSE_ITEM_INDEX]    : begin
+    state[DISPENSE_ITEM_INDEX]    : begin
   					next_state = IDLE;
   					end
           endcase
