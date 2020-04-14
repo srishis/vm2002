@@ -1,3 +1,4 @@
+
 // RTL Design for vm2002 for Assignment 1
 
 `include "vm2002_pkg.svh"
@@ -30,14 +31,14 @@ logic insufficient_amount;
 // import package
 import vm2002_pkg::*;
 
-state_t state, next_state;
+//state_t state, next_state;
 item_count_struct_t item_reg;
 cost_struct_t cost_reg;
 
   assign coins_t   = coins;
   assign buttons_t = buttons;
-  assign item_t    = items;
-  assign status_t  = status;
+  assign item_t    = item;
+  assign status    = status_t;
 
 // initial condition
   always_ff@(posedge clk) begin
@@ -50,6 +51,28 @@ cost_struct_t cost_reg;
   	timer   <= '1;		// set timer to max value for down count
   end
   // add soft reset logic
+  else if(srst) begin
+	// on soft reset, maintain balance, timer, inventory and cost of item
+  	balance 		  <= balance;
+  	timer   		  <= '1;		// set timer to max value for down count
+	item_reg.WATER_COUNT      <= item_reg.WATER_COUNT;
+	item_reg.COLA_COUNT       <= item_reg.COLA_COUNT;
+	item_reg.PEPSI_COUNT      <= item_reg.PEPSI_COUNT;
+	item_reg.FANTA_COUNT      <= item_reg.FANTA_COUNT;
+	item_reg.COFFEE_COUNT     <= item_reg.COFFEE_COUNT;
+	item_reg.CHIPS_COUNT      <= item_reg.CHIPS_COUNT;
+	item_reg.BARS_COUNT       <= item_reg.BARS_COUNT;
+	//item_reg.COOKIE_COUNT   <= item_reg.COOKIE_COUNT;
+	cost_reg.COST_OF_WATER    <= cost_reg.COST_OF_WATER;						
+  	cost_reg.COST_OF_COLA     <= cost_reg.COST_OF_COLA;							
+  	cost_reg.COST_OF_PEPSI    <= cost_reg.COST_OF_PEPSI;				
+  	cost_reg.COST_OF_FANTA    <= cost_reg.COST_OF_FANTA;
+   	cost_reg.COST_OF_COFFEE   <= cost_reg.COST_OF_COFFEE;						
+        cost_reg.COST_OF_CHIPS    <= cost_reg.COST_OF_CHIPS;					
+        cost_reg.COST_OF_BARS     <= cost_reg.COST_OF_BARS;				
+        //cost_reg.COST_OF_COOKIE <= cost_reg.COST_OF_COOKIE;
+
+  end
   else begin
   	product	<= product;
   	status 	<= status;
@@ -156,52 +179,52 @@ cost_struct_t cost_reg;
   	state[INSERT_COINS_INDEX]     : begin 
   				    	//if(!cancel)
   				    	start_timer = 1'b1;
-						while(!select)begin	
-						if(coins_t == NICKEL)	        amount += 16'h5;	// $0.05
-						else if (coins_t == DIME)	amount += 16'hA;	// $0.10		
-						else if (coins_t == QUARTER)	amount += 16'h19;	// $0.25
-						else				amount = amount;			
-						//else amount = 0;			
-						// make insert coins control signal low
-						end
-						insert_coins = 1'b0;
-						  
-						end
+					//while(!select) begin	
+					if(coins_t == NICKEL)	        amount += 16'h5;	// $0.05
+					else if (coins_t == DIME)	amount += 16'hA;	// $0.10		
+					else if (coins_t == QUARTER)	amount += 16'h19;	// $0.25
+					else				amount  = amount;			
+					//else amount = 0;			
+					// make insert coins control signal low
+					end
+					//insert_coins = 1'b0;
+					  
+					end
   
   	// if(!cancel && !insert_coins)
   	state[CHECK_BALANCE]          : begin 
   				    	start_timer = 1'b0;
   					if(buttons_t == A)	// WATER
-  					  if(amount >= cost_reg.COST_OF_WATER)	       balance = amount - cost_reg.COST_OF_WATER;
-  					  else if(amount < cost_reg.COST_OF_WATER)     insufficient_amount = 1'b1;
-  					  else 					       balance = 0;
+  					  if(amount > cost_reg.COST_OF_WATER)	        balance = amount - cost_reg.COST_OF_WATER;
+  					  else if(amount < cost_reg.COST_OF_WATER)      insufficient_amount = 1'b1;
+  					  else 					        balance = 0;
   					else if(buttons_t == B)	// COLA
-  					  if(amount >= cost_reg.COST_OF_COLA)	       balance = amount - cost_reg.COST_OF_COLA;
-  					  else if(amount < cost_reg.COST_OF_COLA)      insufficient_amount = 1'b1;
-  					  else 					       balance = 0;
+  					  if(amount > cost_reg.COST_OF_COLA)	        balance = amount - cost_reg.COST_OF_COLA;
+  					  else if(amount < cost_reg.COST_OF_COLA)       insufficient_amount = 1'b1;
+  					  else 					        balance = 0;
   					else if(buttons_t == C)	// PEPSI
-  					  if(amount >= cost_reg.COST_OF_PEPSI)	        balance = amount - cost_reg.COST_OF_PEPSI;
+  					  if(amount > cost_reg.COST_OF_PEPSI)	        balance = amount - cost_reg.COST_OF_PEPSI;
   					  else if (amount < cost_reg.COST_OF_PEPSI)	insufficient_amount = 1'b1;
   					  else 					        balance = 0;
   					else if(buttons_t == D)	// FANTA
-  					  if(amount >= cost_reg.COST_OF_FANTA)	        balance = amount - cost_reg.COST_OF_FANTA;
+  					  if(amount > cost_reg.COST_OF_FANTA)	        balance = amount - cost_reg.COST_OF_FANTA;
   					  else if (amount < cost_reg.COST_OF_FANTA)	insufficient_amount = 1'b1;
   					  else 					        balance = 0;
   					else if(buttons_t == E)	// COFFEE
-  					  if(amount >= cost_reg.COST_OF_COFFEE)	        balance = amount - cost_reg.COST_OF_COFFEE;
+  					  if(amount > cost_reg.COST_OF_COFFEE)	        balance = amount - cost_reg.COST_OF_COFFEE;
   					  else if (amount < cost_reg.COST_OF_COFFEE)	insufficient_amount = 1'b1;
   					  else 					        balance = 0;
   					else if(buttons_t == F)	// CHIPS
-  					  if(amount >= cost_reg.COST_OF_CHIPS)	        balance = amount - cost_reg.COST_OF_CHIPS;
+  					  if(amount > cost_reg.COST_OF_CHIPS)	        balance = amount - cost_reg.COST_OF_CHIPS;
   					  else if (amount < cost_reg.COST_OF_CHIPS)	insufficient_amount = 1'b1;
   					  else 					        balance = 0;
   					else if(buttons_t == G)	// BARS
-  					  if(amount >= cost_reg.COST_OF_BARS)	        balance = amount - cost_reg.COST_OF_BARS;
+  					  if(amount > cost_reg.COST_OF_BARS)	        balance = amount - cost_reg.COST_OF_BARS;
   					  else if (amount < cost_reg.COST_OF_BARS)	insufficient_amount = 1'b1;
   					  else 					        balance = 0;
   					//if(buttons_t == H)	// COOKIE
-  					//if(amount >= cost_reg.COST_OF_COOKIE)	       balance = amount - cost_reg.COST_OF_COOKIE;
-  					//if(amount >= cost_reg.COST_OF_COOKIE)        status_t = ERROR;	
+  					//if(amount > cost_reg.COST_OF_COOKIE)	       balance = amount - cost_reg.COST_OF_COOKIE;
+  					//if(amount > cost_reg.COST_OF_COOKIE)         status_t = ERROR;	
   					//else 					       balance = 0;
   					end
   
@@ -209,36 +232,36 @@ cost_struct_t cost_reg;
   					  // update the stock
   					  unique case(item)
   						WATER: 	begin	
-  							  if(item_count.WATER_COUNT + count > 5'h10)	status_t = ERROR;
-  							  else 						item_count.WATER_COUNT = item_count.WATER_COUNT + count;
+  							  if(item_reg.WATER_COUNT + count > 5'h10)	status_t = ERROR;
+  							  else 						item_reg.WATER_COUNT = item_reg.WATER_COUNT + count;
   							end
   						COLA:	begin	
-  							  if(item_count.COLA_COUNT + count > 5'h10)	status_t = ERROR;
-  							  else 						item_count.COLA_COUNT = item_count.COLA_COUNT + count;
+  							  if(item_reg.COLA_COUNT + count > 5'h10)	status_t = ERROR;
+  							  else 						item_reg.COLA_COUNT = item_reg.COLA_COUNT + count;
   							end
   						PEPSI:	begin	
-  							  if(item_count.PEPSI_COUNT + count > 5'h10)	status_t = ERROR;
-  						       	  else 						item_count.PEPSI_COUNT = item_count.PEPSI_COUNT + count;
+  							  if(item_reg.PEPSI_COUNT + count > 5'h10)	status_t = ERROR;
+  						       	  else 						item_reg.PEPSI_COUNT = item_reg.PEPSI_COUNT + count;
   							end
   						FANTA:  begin
-  							  if(item_count.FANTA_COUNT + count > 5'h10)	status_t = ERROR;
-  							  else 						item_count.FANTA_COUNT = item_count.FANTA_COUNT + count;
+  							  if(item_reg.FANTA_COUNT + count > 5'h10)	status_t = ERROR;
+  							  else 						item_reg.FANTA_COUNT = item_reg.FANTA_COUNT + count;
   							end
   						COFFEE:	begin	
-  							  if(item_count.COFFEE_COUNT + count > 5'h10)	status_t = ERROR;
-  							  else 						item_count.COFFEE_COUNT = item_count.COFFEE_COUNT + count;
+  							  if(item_reg.COFFEE_COUNT + count > 5'h10)	status_t = ERROR;
+  							  else 						item_reg.COFFEE_COUNT = item_reg.COFFEE_COUNT + count;
   							end
   						CHIPS:	begin	
-  							  if(item_count.CHIPS_COUNT + count > 5'h10)	status_t = ERROR;
-  							  else 						item_count.CHIPS_COUNT = item_count.CHIPS_COUNT + count;
+  							  if(item_reg.CHIPS_COUNT + count > 5'h10)	status_t = ERROR;
+  							  else 						item_reg.CHIPS_COUNT = item_reg.CHIPS_COUNT + count;
   							end
   						BARS:	begin	
-  							  if(item_count.BARS_COUNT + count > 5'h10)	status_t = ERROR;
-  							  else 						item_count.BARS_COUNT = item_count.BARS_COUNT + count;
+  							  if(item_reg.BARS_COUNT + count > 5'h10)	status_t = ERROR;
+  							  else 						item_reg.BARS_COUNT = item_reg.BARS_COUNT + count;
   							end
   					//	COOKIE: begin	
-  					//		  if(item_count.COOKIE_COUNT + count > 5'h10)	status_t = ERROR;
-  					//		  else item_count.COOKIE_COUNT = item_count.COOKIE_COUNT + count;
+  					//		  if(item_reg.COOKIE_COUNT + count > 5'h10)	status_t = ERROR;
+  					//		  else item_reg.COOKIE_COUNT = item_reg.COOKIE_COUNT + count;
   			   		//		end	
   					  endcase
   					if(cost)
@@ -257,38 +280,38 @@ cost_struct_t cost_reg;
   			
   						BARS  :	cost_reg.COST_OF_BARS   = cost;	
   			
-  						//COOKIE:	item_cost.COST_OF_COOKIE = cost;		
+  						//COOKIE:	cost_reg.COST_OF_COOKIE = cost;		
   					  endcase
   					else begin
-  					  item_cost.COST_OF_WATER = item_cost.COST_OF_WATER;						
-  					  item_cost.COST_OF_COLA = item_cost.COST_OF_COLA ;							
-  					  item_cost.COST_OF_PEPSI = item_cost.COST_OF_PEPSI;						
-  					  item_cost.COST_OF_FANTA = item_cost.COST_OF_FANTA;
-  					  item_cost.COST_OF_COFFEE = item_cost.COST_OF_COFFEE;						
-  					  item_cost.COST_OF_CHIPS = item_cost.COST_OF_CHIPS;					
-  					  item_cost.COST_OF_BARS = item_cost.COST_OF_BARS;				
-  					  //item_cost.COST_OF_COOKIE = item_cost.COST_OF_COOKIE;
+  					  cost_reg.COST_OF_WATER  = cost_reg.COST_OF_WATER;						
+  					  cost_reg.COST_OF_COLA   = cost_reg.COST_OF_COLA ;							
+  					  cost_reg.COST_OF_PEPSI  = cost_reg.COST_OF_PEPSI;						
+  					  cost_reg.COST_OF_FANTA  = cost_reg.COST_OF_FANTA;
+  					  cost_reg.COST_OF_COFFEE = cost_reg.COST_OF_COFFEE;						
+  					  cost_reg.COST_OF_CHIPS  = cost_reg.COST_OF_CHIPS;					
+  					  cost_reg.COST_OF_BARS   = cost_reg.COST_OF_BARS;				
+  					  //cost_reg.COST_OF_COOKIE = cost_reg.COST_OF_COOKIE;
   					end
   					end	// end of RESTOCK case
   				
   	state[DISPENSE_ITEM_INDEX]  : begin 
   	 				//product = item;
   	 				unique case(buttons_t)
-  						A : product  = WATER;	
+  						A : 	begin product  = WATER;   item_reg.WATER_COUNT  = item_reg.WATER_COUNT - 1'b1; end	
   					
-  						B :	product  = COLA;		
+  						B :	begin product  = COLA;	  item_reg.COLA_COUNT   = item_reg.COLA_COUNT - 1'b1; end	
   					
-  						C :	product  = PEPSI;	
+  						C :	begin product  = PEPSI;   item_reg.PEPSI_COUNT  = item_reg.PEPSI_COUNT - 1'b1; end	
   					
-  						D :	product  = FANTA;	
+  						D :	begin product  = FANTA;   item_reg.FANTA_COUNT  = item_reg.FANTA_COUNT - 1'b1; end	
   					
-  						E :	product  = COFFEE;		
+  						E :	begin product  = COFFEE;  item_reg.COFFEE_COUNT = item_reg.COFFEE_COUNT - 1'b1; end		
   					
-  						F :	product  = CHIPS;		
+  						F :	begin product  = CHIPS;	  item_reg.CHIPS_COUNT  = item_reg.CHIPS_COUNT - 1'b1; end	
   			
-  						G :	product  = BARS;	
+  						G :	begin product  = BARS;    item_reg.COOKIE_COUNT = item_reg.COOKIE_COUNT - 1'b1; end	
   			
-  						//H:	product  = COOKIE;	
+  						//H:	begin product  = COOKIE;	
   					  endcase	
   				      end	
   
@@ -304,24 +327,29 @@ cost_struct_t cost_reg;
   	unique case(1'b1)	// reverse case
   	
   	state[IDLE_INDEX]             : begin 
+					// if supplier press valid, enter in RESTOCK state
   			                if(valid)			next_state = RESTOCK;
+					// if no valid or buttons are pressed, stay in this state
   			                else if (!valid && !buttons) 	next_state = IDLE;
+					// if no valid and user presses a button, go to CHECK_ITEM_COUNT state
   			                else if (!valid && buttons)	next_state = CHECK_ITEM_COUNT;
   			                end
   
   	state[CHECK_ITEM_COUNT_INDEX] : begin 
+					// if insert coins is asserted and status indicates requested item is available, go to INSERT_COINS state. 
   					if(insert_coins && status_t == AVAILABE)	next_state = INSERT_COINS;
+					// if insert coins is deasserted and status indicates requested item is available, stay in this state. 
   					else if(!insert_coins && status_t == AVAILABE)	next_state = CHECK_ITEM_COUNT;
-  					// if the requested item is not available, go back to IDLE state
+  					// if status indicates the requested item is not available, go back to IDLE state
   					else if (status_t != AVAILABE)			next_state = IDLE;
   					end
   
   	state[INSERT_COINS_INDEX]     : begin 
-  					if(coins && !insert_coins)			next_state = CHECK_BALANCE;
-  					// wait for coins till timeout 
-  					else if(!coins || !timeout)			next_state = INSERT_COINS;
-  					// if no coins inserted and timeout occurs, go back to IDLE
-  					else if(!coins || timeout || status_t == ERROR)	next_state = IDLE;
+  					if(select)			 	       	 next_state = CHECK_BALANCE;
+  					// wait for user to insert coins and then press select till timeout
+  					else if(!select && !timeout)			 next_state = INSERT_COINS;
+  					// if no coins are inserted or user doesn't press select and timeout occurs, go back to IDLE
+  					else if(!select && timeout || status_t == ERROR) next_state = IDLE;
   					end
   
   	state[CHECK_BALANCE]          : begin 
@@ -330,12 +358,12 @@ cost_struct_t cost_reg;
   					else 				next_state = DISPENSE_ITEM;
   					end
   
-    state[RESTOCK_INDEX]	      : begin
+       state[RESTOCK_INDEX]	      : begin
   					if(!valid)	next_state = IDLE;
   					else		next_state = RESTOCK;
   					end
   	
-    state[DISPENSE_ITEM_INDEX]    : begin
+      state[DISPENSE_ITEM_INDEX]      : begin
   					next_state = IDLE;
   					end
           endcase
