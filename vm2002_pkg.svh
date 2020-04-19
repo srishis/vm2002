@@ -63,9 +63,9 @@ package vm2002_common_pkg;
 
   // enum for product availability status
   typedef enum logic [1:0] {
-	AVAILABE      = 2'h1,
-	OUT_OF_STOCK  = 2'h2,
-	ERROR	      = 2'h3
+	AVAILABLE      = 2'h1,
+	OUT_OF_STOCK   = 2'h2,
+	ERROR	       = 2'h3
   } status_t;
 
   // Indices for FSM states in Vending machine for bug free state logic 
@@ -90,5 +90,3 @@ package vm2002_common_pkg;
 
 
 endpackage
-
-
