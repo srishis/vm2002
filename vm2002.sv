@@ -60,7 +60,7 @@ cost_struct_t cost_reg;
   					unique case (pif.buttons)	// reverse case
   					 A:	begin
   						if(item_reg.WATER_COUNT != 0) begin
-  						pif.status = AVAILABE;
+  						pif.status = AVAILABLE;
 						pif.info = cost_reg.COST_OF_WATER;
 						end
   						else
@@ -69,7 +69,7 @@ cost_struct_t cost_reg;
   					//if(button == B)	// COLA
   					 B:	begin
   						if(item_reg.COLA_COUNT != 0) begin
-  						pif.status = AVAILABE;
+  						pif.status = AVAILABLE;
 						pif.info = cost_reg.COST_OF_COLA;
 						end
   						else
@@ -78,7 +78,7 @@ cost_struct_t cost_reg;
   					//if(button == C)	// PEPSI
   					 C:	begin
   						if(item_reg.PEPSI_COUNT != 0) begin
-  						pif.status = AVAILABE;
+  						pif.status = AVAILABLE;
 						pif.info = cost_reg.COST_OF_PEPSI;
 						end
   						else
@@ -87,7 +87,7 @@ cost_struct_t cost_reg;
   					//if(button == D)	// FANTA
   					 D:	begin
   						if(item_reg.FANTA_COUNT != 0) begin
-  						pif.status = AVAILABE;
+  						pif.status = AVAILABLE;
 						pif.info = cost_reg.COST_OF_FANTA;
 						end
   						else
@@ -96,7 +96,7 @@ cost_struct_t cost_reg;
   					//if(button == E)	// COFFEE
   					 E:	begin
   						if(item_reg.COFFEE_COUNT != 0) begin
-  						pif.status = AVAILABE;
+  						pif.status = AVAILABLE;
 						pif.info = cost_reg.COST_OF_COFFEE;
 						end
   						else
@@ -105,7 +105,7 @@ cost_struct_t cost_reg;
   					//if(button == F)	// CHIPS
   					 F:	begin
   						if(item_reg.CHIPS_COUNT != 0) begin
-  						pif.status = AVAILABE;
+  						pif.status = AVAILABLE;
 						pif.info = cost_reg.COST_OF_CHIPS;
 						end
   						else
@@ -114,7 +114,7 @@ cost_struct_t cost_reg;
   					//if(button == G)	// BARS
   					 G:	begin
   						if(item_reg.BARS_COUNT != 0) begin
-  						pif.status = AVAILABE;
+  						pif.status = AVAILABLE;
 						pif.info = cost_reg.COST_OF_BARS;
 						end
   						else
@@ -270,11 +270,11 @@ cost_struct_t cost_reg;
   
   	state[CHECK_ITEM_COUNT_INDEX] : begin 
 					// if insert pif.coins is asserted and pif.status indicates requested pif.item is available, go to INSERT_COINS state. 
-  					if(pif.insert_coins && pif.status == AVAILABE)		next_state = INSERT_COINS;
+  					if(pif.insert_coins && pif.status == AVAILABLE)		next_state = INSERT_COINS;
 					// if insert pif.coins is deasserted and pif.status indicates requested pif.item is available, stay in this state. 
-  					else if(!pif.insert_coins && pif.status == AVAILABE)	next_state = CHECK_ITEM_COUNT;
+  					else if(!pif.insert_coins && pif.status == AVAILABLE)	next_state = CHECK_ITEM_COUNT;
   					// if pif.status indicates the requested pif.item is not available, go back to IDLE state
-  					else if (pif.status != AVAILABE || pif.srst)		next_state = IDLE;
+  					else if (pif.status != AVAILABLE || pif.srst)		next_state = IDLE;
   					end
   
   	state[INSERT_COINS_INDEX]     : begin 
