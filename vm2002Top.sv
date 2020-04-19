@@ -17,6 +17,9 @@ vm2002_if vif(clk, hrst);
 // DUT instantiation
 vm2002 V1(.*);
 
+// COVERAGE instantiation
+vm2002_cov cov(vif);
+
 int loop = 0;
 
 // clock generation
@@ -37,7 +40,12 @@ endtask : apply_hard_reset
 task run();
   apply_hard_reset();
   configure();
+  fork
+  cov.cov_run();
+  while(cov.vm2002_cg.get_coverage() < 100) begin
   random_stimulus();
+  end
+  join_any
   // check_results();
 endtask : run
 
@@ -66,7 +74,8 @@ endtask : report_results
 
 // configure design before generating stimulus
 task configure();
-
+  //covergroup new function called - covergroup created
+  cov.cov_new();
   item_count_struct_t item_reg;
   cost_struct_t cost_reg;
   coins_t coin;
@@ -111,6 +120,7 @@ end
 		vif.item  = $urandom_range(1,7);
 		vif.count = $urandom_range(0,15);
 		// logic to generate random cost to be a multiple of 5
+		//TODO:Use Internal Variable
 		vif.cost  = $urandom_range(0,255);
 		vif.cost -= vif.cost % 5;
 		
@@ -124,7 +134,7 @@ end
 	// user mode
 	else 
 		vif.buttons  = $urandom_range(1,7);
-		wait(vif.status === AVAILABLE || vif.status === OUT_OF_STOCK)
+		wait(vif.status === AVAILABLE || vif.status === OUT_OF_STOCK);
 		vif.srst = $urandom;
 		if(vif.srst == 0) begin
 			wait(vif.insert_coins === 1);
