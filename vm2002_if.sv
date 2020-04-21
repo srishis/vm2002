@@ -1,28 +1,37 @@
-interface vm_2002_if(logic clk, hrst, srst);
+// Interface for VM2002 design
 
-// import package
-import vm2002_pkg::*;
+`include "vm2002_pkg.svh"
+interface vm2002_if(input logic clk, hrst);
 
-// user interface s
-coin_t coins; 
+import vm2002_common_pkg::*;
+
+logic srst;
+
+// output interface
+logic [2:0] product;
+logic [15:0] balance;
+logic [7:0] info;
+status_t status;
+
+// user interface inputs
+coins_t coins; 
 buttons_t buttons; 
 logic select; 
 
 // supplier interface inputs
-item_t item;
-logic [2:0] count;
-logic [7:0] cost;
 logic valid;
+item_t item;
+logic [3:0] count;
+logic [7:0] cost;
 
-// output interface
-item_t product;
-status_t status;
-logic [15:0] balance;
-cost_struct_t info;
-
-modport DUT(
-input 
-output
-);
+// internal variables
+logic [15:0] amount;
+logic insert_coins;
+logic [8:0] timer;				// 9 bit down counter which counts 512 clocks
+logic start_timer;				// control signal for internal timer	
+logic [15:0] prev_balance;
+logic [15:0] prev_amount;
+logic insufficient_amount;
 
 endinterface
+
