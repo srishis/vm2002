@@ -10,6 +10,7 @@ import vm2002_common_pkg::*;
 fsm_state_t state, next_state;
 item_count_struct_t item_reg;
 cost_struct_t cost_reg;
+
 //pif.coins_t coin;
 //pif.buttons_t button;
 //pif.item_t pif.items;
@@ -41,7 +42,7 @@ cost_struct_t cost_reg;
 
 
 // watchdog timer logic using down pif.counter
-  assign timeout = (pif.timer == '0) ? 1 : 0;
+  assign vif.timeout = (pif.timer == '0) ? 1 : 0;
   always_ff@(posedge pif.clk) begin
   if(pif.start_timer) pif.timer <= pif.timer - 1'b1;
   else		      pif.timer <= '1;
@@ -50,12 +51,15 @@ cost_struct_t cost_reg;
 // FSM output logic
   always_comb begin
     // default value for outputs and internal variables for each state
-    {pif.product, pif.status, pif.info, pif.balance, pif.amount, pif.insert_coins, pif.insufficient_amount} = '0;
+    {pif.product, pif.status, pif.info, pif.balance, pif.insert_coins, pif.insufficient_amount, pif.start_timer} = '0;
     
     unique case (1'b1) 	// reverse case
-  	state[IDLE_INDEX] 	      : begin  end
+  	state[IDLE_INDEX] 	      : begin  
+					pif.amount = '0;
+					end
 
   	state[CHECK_ITEM_COUNT_INDEX] : begin 
+					pif.amount = '0;
   					//if(button == A)	// WATER
   					unique case (pif.buttons)	// reverse case
   					 A:	begin
@@ -123,16 +127,19 @@ cost_struct_t cost_reg;
   					endcase
   
   					pif.insert_coins = 1'b1;
+  				    	//pif.start_timer = 1'b1;
   					end 
   
   	state[INSERT_COINS_INDEX]     : begin 
   				    	pif.start_timer = 1'b1;
+  				    	//if(pif.start_timer == 1'b1) begin
 					if(pif.coins == NICKEL)	        pif.amount += pif.prev_amount + 16'h5;	// $0.05
 					else if (pif.coins == DIME)		pif.amount += pif.prev_amount + 16'hA;	// $0.10		
 					else if (pif.coins == QUARTER)	pif.amount += pif.prev_amount + 16'h19;	// $0.25
 					else				pif.amount  = pif.amount;			
 					//pif.balance = '0;
 					end
+					//end
 					  
   
   	// compare cost with amount inserted by user and compute pif.balance 
@@ -202,7 +209,7 @@ cost_struct_t cost_reg;
   					  endcase
   					// update the cost of items
   					if(pif.cost)
-  					  unique case(pif.items)
+  					  unique case(pif.item)
   						WATER : cost_reg.COST_OF_WATER  = pif.cost;	
   					
   						COLA  :	cost_reg.COST_OF_COLA   = pif.cost;		
@@ -270,7 +277,7 @@ cost_struct_t cost_reg;
   
   	state[CHECK_ITEM_COUNT_INDEX] : begin 
 					// if insert pif.coins is asserted and pif.status indicates requested pif.item is available, go to INSERT_COINS state. 
-  					if(pif.insert_coins && pif.status == AVAILABLE)		next_state = INSERT_COINS;
+  					if(pif.insert_coins)		next_state = INSERT_COINS;
 					// if insert pif.coins is deasserted and pif.status indicates requested pif.item is available, stay in this state. 
   					else if(!pif.insert_coins && pif.status == AVAILABLE)	next_state = CHECK_ITEM_COUNT;
   					// if pif.status indicates the requested pif.item is not available, go back to IDLE state
@@ -280,9 +287,9 @@ cost_struct_t cost_reg;
   	state[INSERT_COINS_INDEX]     : begin 
   					if(pif.select)			 	       	 	next_state = CHECK_BALANCE;
   					// wait for user to insert pif.coins and then press pif.select till timeout
-  					else if(!pif.select && !timeout)			 	next_state = INSERT_COINS;
+  					else if(!pif.select && !vif.timeout)			 	next_state = INSERT_COINS;
   					// if no pif.coins are inserted or user doesn't press pif.select and timeout occurs, go back to IDLE
-  					else if(!pif.select && timeout || pif.status == ERROR || pif.srst)    next_state = IDLE;
+  					else if(!pif.select && vif.timeout || pif.status == ERROR || pif.srst)    next_state = IDLE;
   					end
   
   	state[CHECK_BALANCE]          : begin 
