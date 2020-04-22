@@ -33,14 +33,14 @@ int test_count = 0;
 // clock generation
 initial begin
  clk = 0;
- repeat(1000) #CLK_PERIOD clk = ~clk;
+ repeat(10000) #CLK_PERIOD clk = ~clk;
  $stop;
 end
 
 // apply and Lift hard reset 
 task apply_hard_reset();
  hrst = 1;
- repeat(10*CYCLES) @(posedge clk);
+ repeat(10*CYCLES) @(negedge clk);
  hrst = 0;
 endtask : apply_hard_reset
 
@@ -106,7 +106,8 @@ task add_coins();
 $display("*Inside add coins with loop = %d*", loop);
   repeat(loop) begin
   	vif.coins = $urandom_range(1,3);
-  	@(posedge clk);
+  	@(negedge clk);
+	$display("AMOUNT = %d", vif.amount);
   end
 endtask : add_coins
 
@@ -118,19 +119,19 @@ end
 	// randomize valid signal to enter either in supplier mode or user mode
 	// apply random stimulus
 	task random_stimulus();
-	repeat(5*CYCLES)@(posedge clk);
+	repeat(5*CYCLES)@(negedge clk);
 	vif.valid = 1; 
 	// supplier mode
 	if(vif.valid == 1) begin
 		repeat(5)begin
-		//@posedge(clk)
+		//@negedge(clk)
 		vif.item  = $urandom_range(1,7);
 		vif.count = $urandom_range(0,15);
 		// logic to generate random cost to be a multiple of 5
 		temp = $urandom_range(0,255);
 		vif.cost -= temp % 5;
 		
-		repeat(2*CYCLES)@(posedge clk);
+		repeat(2*CYCLES)@(negedge clk);
 		vif.valid = 0;
 		$display("SUPPLIER MODE : RESULTS DISPLAY");
 		report_results();
@@ -143,7 +144,7 @@ end
 
 	// user mode
 	if(vif.valid == 0) begin
-		repeat(1) begin
+		repeat(3) begin
 		vif.buttons  = $urandom_range(1,7);
 		$display("WAIT: for status");
 		wait(vif.status === AVAILABLE || vif.status === OUT_OF_STOCK);
@@ -152,7 +153,7 @@ end
 		$display("WAIT: for insert_coins");
 			wait(vif.insert_coins === 1);
 			$display("WAIT: for start_timer");
-			@(posedge clk);
+			//	@(negedge clk);
 			wait(vif.start_timer === 1);
 			// insert coins
 			add_coins();
@@ -160,7 +161,12 @@ end
 			//vif.srst = $urandom;
 			if(vif.srst == 0) vif.select = $urandom;
 		
-			if(vif.select == 0) begin $display("WAIT: for timeout"); wait(vif.timeout === 1); end
+			if(vif.select == 0) begin 
+				$display("WAIT: for timeout"); 
+				while(vif.timeout !== 1) @(negedge clk);
+				//wait(vif.timeout === 1); 
+				$display("USER: WAIT:  TIMEOUT OCCURRED!!!!"); 
+				end
 			else if(vif.select == 1 && vif.timeout === 0) begin
 		$display("WAIT: for start timer 0");
 				wait(vif.start_timer === 0);
@@ -168,7 +174,7 @@ end
 					add_coins();
 				end
 			end
-		repeat(2*CYCLES)@(posedge clk);
+		repeat(2*CYCLES)@(negedge clk);
 		$display("USER MODE : RESULTS DISPLAY");
 		report_results();
 		test_count++;
