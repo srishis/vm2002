@@ -11,7 +11,8 @@ COINS_CP: coverpoint vif.coins{
 				bins nickel = 	{NICKEL};	
 				bins dime 	= 	{DIME};
 				bins quarter = 	{QUARTER};
-				bins C_ZERO    = {2'h0};	
+				//bins C_ZERO    = {2'h0};	
+				bins  others = default;
 								}
 								
 BUTTONS_CP : coverpoint vif.buttons{
@@ -23,7 +24,8 @@ BUTTONS_CP : coverpoint vif.buttons{
 				bins e 	= 	{E};
 				bins f  = 	{F};						
 				bins g  = 	{G};
-				bins B_ZERO    = {2'h0};	
+				//bins B_ZERO    = {2'h0};	
+				bins  others = default;
 								}
 								
 SELECT_CP:coverpoint vif.select{
@@ -80,9 +82,7 @@ endgroup
 initial begin
 	vm2002_cg cg;
 	cg = new();
-	forever begin
-	cg.sample();
-	end
+  	while(cg.get_coverage() < 100) cg.sample();
 end
 
 endmodule
