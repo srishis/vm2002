@@ -41,6 +41,8 @@ modport DUT(
 modport TB(clocking cb);
 
 clocking cb @(posedge clk);
+	default input #step output #1;
+endclocking 
 
 endinterface
 
