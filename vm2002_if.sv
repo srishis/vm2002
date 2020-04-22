@@ -33,5 +33,14 @@ logic [15:0] prev_balance;
 logic [15:0] prev_amount;
 logic insufficient_amount;
 
+modport DUT(
+			input clk, hrst, srst, coins, buttons, select, valid, item, count,  cost, 
+			output product, balance, info, status
+);
+
+modport TB(clocking cb);
+
+clocking cb @(posedge clk);
+
 endinterface
 
