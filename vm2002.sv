@@ -17,35 +17,25 @@ item_t items;
 status_t stat;
 
 always_comb begin
-  //$cast(coin, pif.coins);
-  //$cast(button, pif.buttons);
-  //$cast(items, pif.item);
   $cast(pif.status, stat);
   // cast signals to enum for readability
   coin =  coins_t'(pif.coins);
   button =  buttons_t'(pif.buttons);
   items =  item_t'(pif.item);
-  //pif.status =  logic'(stat);
-  //stat =  status_t'(pif.status);
 end
 
 
 // initial condition
   always_ff@(posedge pif.clk) begin
   if(pif.hrst) begin state       <= IDLE;
-  	         pif.timer   <= '1;		// set pif.timer to max value for down count
 		 pif.configure();
 		 //prev_balance <= '0;
   end
-  else begin state        <= next_state;
-  	     pif.timer    <= pif.timer;		
-	     //prev_balance <= prev_balance;
-  end
+  else state        <= next_state;
   end // always_ff block for  initial condition 
 
   // add soft reset logic to restore previous balance
   always@(posedge pif.srst, posedge pif.insufficient_amount) begin
-  //prev_balance <= pif.balance;
   pif.prev_amount  = pif.amount;
   end
 
@@ -102,8 +92,6 @@ end
   							  else 						BARS_COUNT = BARS_COUNT + pif.count;
   							end
   					  endcase
-					WATER_COUNT += 4;
-					$display("WATER=%h",WATER_COUNT);
   					// update the cost of items
   					if(pif.cost)
   					  unique case(items)
@@ -131,8 +119,6 @@ end
   					  COST_OF_CHIPS  = COST_OF_CHIPS;					
   					  COST_OF_BARS   = COST_OF_BARS;				
   					end
-					COST_OF_WATER += 10;
-					$display("COSTWATER=%h",COST_OF_WATER);
   					end	// end of RESTOCK case
 
   	state[CHECK_ITEM_COUNT_INDEX] : begin 
@@ -209,7 +195,7 @@ end
   					end 
   
   	state[INSERT_COINS_INDEX]     : begin 
-					pif.balance = '0;
+					//pif.balance = '0;
   				    	pif.start_timer = 1'b1;
   				    	//if(pif.start_timer == 1'b1) begin
 					if(coin == NICKEL)	        pif.amount += pif.prev_amount + 16'h5;	// $0.05
@@ -221,7 +207,7 @@ end
 					  
   
   	// compare cost with amount inserted by user and compute pif.balance 
-  	state[CHECK_BALANCE]          : begin 
+  	state[CHECK_BALANCE_INDEX]          : begin 
   				    	pif.start_timer = 1'b0;
   					if(button == A)	// WATER
   					  if(pif.amount > COST_OF_WATER)	pif.balance = pif.amount - COST_OF_WATER;
@@ -265,7 +251,7 @@ end
 						pif.insufficient_amount = 1'b1;
 					  end
   					  else 					        pif.balance = 0;
-  					$display("********BALANCE = %h", pif.balance);
+					//$display("************Balance = %0d**************", pif.balance);
 					end
 					
   
@@ -327,7 +313,7 @@ end
   					else if(!pif.select && vif.timeout || stat == ERROR || pif.srst)    next_state = IDLE;
   					end
   
-  	state[CHECK_BALANCE]          : begin 
+  	state[CHECK_BALANCE_INDEX]          : begin 
   					if(stat == ERROR || pif.srst)	next_state = IDLE;
   					else if(pif.insufficient_amount)	next_state = INSERT_COINS;
   					else 				next_state = DISPENSE_ITEM;
