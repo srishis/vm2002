@@ -28,7 +28,7 @@ package vm2002_common_pkg;
 
   // struct for item count register in the vending machine
   // setting all items default count to avg value 8
-  typedef struct packed {
+  //typedef struct {
 	logic [3:0] WATER_COUNT;	 
   	logic [3:0] COLA_COUNT;	 
   	logic [3:0] PEPSI_COUNT;	 
@@ -36,10 +36,10 @@ package vm2002_common_pkg;
 	logic [3:0] COFFEE_COUNT; 
 	logic [3:0] CHIPS_COUNT;	 
 	logic [3:0] BARS_COUNT;	 
-  } item_count_struct_t;
+  //} item_count_struct_t;
   
   // struct for item costs register in the vending machine
-  typedef struct packed {
+  //typedef struct {
 	logic [7:0] COST_OF_WATER;	 
   	logic [7:0] COST_OF_COLA;	
   	logic [7:0] COST_OF_PEPSI;	
@@ -47,7 +47,7 @@ package vm2002_common_pkg;
 	logic [7:0] COST_OF_COFFEE;	
 	logic [7:0] COST_OF_CHIPS;	
 	logic [7:0] COST_OF_BARS;	
-  } cost_struct_t;
+ // } cost_struct_t;
 
 
   // enum for buttons on the vending machine
@@ -90,3 +90,5 @@ package vm2002_common_pkg;
 
 
 endpackage
+
+
