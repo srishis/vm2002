@@ -7,6 +7,24 @@
 
 package vm2002_common_pkg;
 
+   // item count variables
+   logic [3:0] WATER_COUNT;	 
+   logic [3:0] COLA_COUNT;	 
+   logic [3:0] PEPSI_COUNT;	 
+   logic [3:0] FANTA_COUNT;	 
+   logic [3:0] COFFEE_COUNT; 
+   logic [3:0] CHIPS_COUNT;	 
+   logic [3:0] BARS_COUNT;	 
+   
+   // item cost variables
+   logic [7:0] COST_OF_WATER;	 
+   logic [7:0] COST_OF_COLA;	
+   logic [7:0] COST_OF_PEPSI;	
+   logic [7:0] COST_OF_FANTA;	
+   logic [7:0] COST_OF_COFFEE;	
+   logic [7:0] COST_OF_CHIPS;	
+   logic [7:0] COST_OF_BARS;	
+
   // enum for acceptable coins
   typedef enum logic [1:0] {
 	NICKEL      = 2'h1,
@@ -25,30 +43,6 @@ package vm2002_common_pkg;
 	CHIPS	= 3'h6,	
 	BARS	= 3'h7	
   } item_t;
-
-  // struct for item count register in the vending machine
-  // setting all items default count to avg value 8
-  //typedef struct {
-	logic [3:0] WATER_COUNT;	 
-  	logic [3:0] COLA_COUNT;	 
-  	logic [3:0] PEPSI_COUNT;	 
-  	logic [3:0] FANTA_COUNT;	 
-	logic [3:0] COFFEE_COUNT; 
-	logic [3:0] CHIPS_COUNT;	 
-	logic [3:0] BARS_COUNT;	 
-  //} item_count_struct_t;
-  
-  // struct for item costs register in the vending machine
-  //typedef struct {
-	logic [7:0] COST_OF_WATER;	 
-  	logic [7:0] COST_OF_COLA;	
-  	logic [7:0] COST_OF_PEPSI;	
-  	logic [7:0] COST_OF_FANTA;	
-	logic [7:0] COST_OF_COFFEE;	
-	logic [7:0] COST_OF_CHIPS;	
-	logic [7:0] COST_OF_BARS;	
- // } cost_struct_t;
-
 
   // enum for buttons on the vending machine
   typedef enum logic [2:0] {
