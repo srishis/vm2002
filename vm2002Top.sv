@@ -1,5 +1,7 @@
+
 `include"vm2002_pkg.svh"
-module vm2002Top;
+//module vm2002Top;
+module top;
 
 // import package
 import vm2002_common_pkg::*;
@@ -16,25 +18,21 @@ vm2002_if vif(clk, hrst);
 // DUT instantiation
 vm2002 V1(vif);
 
-// COVERAGE instantiation
+// TODO: COVERAGE instantiation
 //vm2002_cov cov(vif);
 
-int loop = 0;
-int temp = 0;
-int test_count = 0;
-
- item_count_struct_t item_reg;
-  cost_struct_t cost_reg;
-  coins_t coin;
-  buttons_t button;
-  item_t items;
-  status_t stat;
+/*
+coins_t coin;
+buttons_t button;
+item_t items;
+status_t stat;
+*/
 
 // clock generation
 initial begin
  clk = 0;
  repeat(10000) #CLK_PERIOD clk = ~clk;
- $stop;
+ //$stop;
 end
 
 // apply and Lift hard reset 
@@ -46,142 +44,91 @@ endtask : apply_hard_reset
 
 // apply random stimulus
 task run();
-  apply_hard_reset();
+apply_hard_reset();
 $display("reset lift complete");
-  configure();
+vif.configure();
 $display("configure complete");
-report_results();
-  //fork
-  //cov.cov_run();
-  //while(cg.get_coverage() < 100)
-  random_stimulus();
+vif.report_results();
+	vif.print_count();
+	vif.print_cost();
+random_stimulus();
   // TODO: check_results();
 endtask : run
 
-// Display results
-task report_results();
-	$display("**********************TEST COUNT = %d**************************", test_count);
-	$display("ITEM REGISTER = %h", item_reg);
-	$display("COST REGISTER = %h", cost_reg);
-	$display("VALID = %h", vif.valid);
-	$display("SOFT RESET = %h", vif.srst);
-	$display("ITEM = %h", vif.item);
-	$display("ITEM COUNT = %h", vif.count);
-	$display("ITEM COST = %h", vif.cost);
-	$display("BUTTON PRESSED = %h", vif.buttons);
-	$display("COINS = %h", vif.coins);
-	$display("PREVIOUS AMOUNT = %h", vif.prev_amount);
-	$display("AMOUNT = %h", vif.amount);
-	$display("INSUFFICIENT AMOUNT = %h", vif.insufficient_amount);
-	$display("SELECT = %h", vif.select);
-	$display("PRODUCT = %h", vif.product);
-	$display("INFO = %h", vif.info);
-	$display("STATUS = %h", vif.status);
-	$display("BALANCE = %h", vif.balance);
-	$display("************************************************");
-endtask : report_results
-
-// TODO: task to check_results
-
-// configure design before generating stimulus
-task configure();
-  //covergroup new function called - covergroup created
-  //cov.cov_new();
- 
-  // default item count
-  item_reg = '0;
-  // default cost
-  cost_reg.COST_OF_WATER  = 8'd50;	// $0.5 		
-  cost_reg.COST_OF_COLA	  = 8'd100;	// $1    		
-  cost_reg.COST_OF_PEPSI  = 8'd100;	// $1    		
-  cost_reg.COST_OF_FANTA  = 8'd100;	// $1    		
-  cost_reg.COST_OF_COFFEE = 8'd200;	// $2    		
-  cost_reg.COST_OF_CHIPS  = 8'd150;	// $1.50      
-  cost_reg.COST_OF_BARS	  = 8'd125;	// $1.25
-endtask : configure
-
-// insert coins task
-task add_coins();
-  loop = $urandom_range(1,51); // 51*5 = 255 which is the max value
-$display("*Inside add coins with loop = %d*", loop);
-  repeat(loop) begin
-  	vif.coins = $urandom_range(1,3);
-  	@(negedge clk);
-	$display("AMOUNT = %d", vif.amount);
-  end
-endtask : add_coins
 
 initial begin
 	// call run task
 	run();
 end
 
-	// randomize valid signal to enter either in supplier mode or user mode
-	// apply random stimulus
-	task random_stimulus();
-	repeat(5*CYCLES)@(negedge clk);
-	vif.valid = 1; 
-	// supplier mode
-	if(vif.valid == 1) begin
-		repeat(5)begin
-		//@negedge(clk)
-		vif.item  = $urandom_range(1,7);
-		vif.count = $urandom_range(0,15);
-		// logic to generate random cost to be a multiple of 5
-		temp = $urandom_range(0,255);
-		vif.cost -= temp % 5;
-		
-		repeat(2*CYCLES)@(negedge clk);
-		vif.valid = 0;
-		$display("SUPPLIER MODE : RESULTS DISPLAY");
-		report_results();
-		test_count++;
-		//$stop;
-		end // end for repeat loop
-	end // end for valid == 1 if block
-
+// randomize valid signal to enter either in supplier mode or user mode
+// apply random stimulus
+task random_stimulus();
+repeat(5*CYCLES)@(negedge clk);
+vif.valid = 1; 
+// supplier mode
+if(vif.valid == 1) begin
+	repeat(5)begin
+	//@negedge(clk)
+	vif.item  = $urandom_range(1,7);
+	vif.count = $urandom_range(0,15);
+	vif.cost = vif.get_cost();
+	repeat(2*CYCLES)@(negedge clk);
 	vif.valid = 0;
+	$display("SUPPLIER MODE : RESULTS DISPLAY");
+	vif.test_count++;
+	vif.report_results();
+	vif.print_count();
+	vif.print_cost();
+	//$stop;
+	end // end for repeat loop
+end // end for valid == 1 if block
 
-	// user mode
-	if(vif.valid == 0) begin
-		repeat(3) begin
-		vif.buttons  = $urandom_range(1,7);
-		$display("WAIT: for status");
-		wait(vif.status === AVAILABLE || vif.status === OUT_OF_STOCK);
-		vif.srst = $urandom;
-		if(vif.srst == 0) begin
-		$display("WAIT: for insert_coins");
-			wait(vif.insert_coins === 1);
-			$display("WAIT: for start_timer");
-			//	@(negedge clk);
-			wait(vif.start_timer === 1);
-			// insert coins
-			add_coins();
-		$display("USER: add coins done!!");
-			//vif.srst = $urandom;
-			if(vif.srst == 0) vif.select = $urandom;
-		
-			if(vif.select == 0) begin 
-				$display("WAIT: for timeout"); 
-				while(vif.timeout !== 1) @(negedge clk);
-				//wait(vif.timeout === 1); 
-				$display("USER: WAIT:  TIMEOUT OCCURRED!!!!"); 
-				end
-			else if(vif.select == 1 && vif.timeout === 0) begin
-		$display("WAIT: for start timer 0");
-				wait(vif.start_timer === 0);
-				if(vif.insufficient_amount === 1) begin
-					add_coins();
-				end
+vif.valid = 0;
+
+// user mode
+if(vif.valid == 0) begin
+	repeat(5) begin
+	vif.buttons  = $urandom_range(1,7);
+	$display("WAIT: for status");
+	wait(vif.status === AVAILABLE || vif.status === OUT_OF_STOCK);
+	vif.srst = $urandom;
+	if(vif.srst == 0) begin
+	$display("WAIT: for insert_coins");
+		wait(vif.insert_coins === 1);
+		$display("WAIT: for start_timer");
+		//	@(negedge clk);
+		wait(vif.start_timer === 1);
+		// insert coins
+		vif.add_coins;
+	$display("USER: add coins done!!");
+		//vif.srst = $urandom;
+		if(vif.srst == 0) vif.select = 1; //$urandom;
+	
+		if(vif.select == 0) begin 
+			$display("WAIT: for timeout"); 
+			while(vif.timeout !== 1) @(negedge clk);
+			//wait(vif.timeout === 1); 
+			$display("USER: WAIT:  TIMEOUT OCCURRED!!!!"); 
 			end
-		repeat(2*CYCLES)@(negedge clk);
-		$display("USER MODE : RESULTS DISPLAY");
-		report_results();
-		test_count++;
-		end // srst if	
-		//$stop;
-		end // end for repeat 
-		end // end for if block 
+		else if(vif.select == 1 && vif.timeout === 0) begin
+	$display("WAIT: for start timer 0");
+			@(negedge clk);
+			wait(vif.start_timer === 0);
+			if(vif.insufficient_amount === 1) begin
+				vif.add_coins;
+			end
+		end
+	repeat(2*CYCLES)@(negedge clk);
+	vif.test_count++;
+	$display("USER MODE : RESULTS DISPLAY");
+	vif.report_results();
+	vif.print_count();
+	vif.print_cost();
+	end // srst if	
+	end // end for repeat 
+end // end for if block 
+	$stop;
 	endtask : random_stimulus
 
 endmodule
