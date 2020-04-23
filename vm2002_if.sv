@@ -19,10 +19,6 @@ logic [1:0] coins;
 logic [2:0] buttons; 
 logic select; 
 
-// registers
-//item_count_struct_t 
-//cost_struct_t 
-
 // supplier interface inputs
 logic valid;
 logic [2:0] item;
@@ -32,87 +28,85 @@ logic [7:0] cost;
 // internal variables
 logic [15:0] amount;
 logic insert_coins;
-logic [4:0] timer;				// 9 bit down counter which counts 512 clocks
-logic start_timer;				// control signal for internal timer	
+logic [4:0] timer;				
+logic start_timer;				
 logic timeout;
 logic [15:0] prev_balance;
 logic [15:0] prev_amount;
 logic insufficient_amount;
 
+// Design modport
 modport DUT(
 			input clk, hrst, srst, coins, buttons, select, valid, item, count,  cost, 
 			output product, balance, info, status
 );
 
+// TB modport
 modport TB(clocking cb,
-		import report_results,
-		import get_cost,
-		import configure,
-		import print_cost,
-		import print_count,
-		import add_coins
-		);
+	   import report_results,
+	   import get_cost,
+	   import configure,
+	   import print_cost,
+	   import print_count,
+	   import add_coins
+	   );
 
 clocking cb @(posedge clk);
 	default input #1step output #1;
 endclocking 
 
-// Test bench methods:
+// Test bench methods
 
 static int test_count = 0;
-static int temp = 0;
 
 // Display results
 function void report_results();
-	$display("**********************TEST COUNT = %d**************************", test_count);
-	//$display("ITEM REGISTER = %p", ;
-	//$display("COST REGISTER = %p", ;
-	$display("VALID = %h", valid);
-	$display("SOFT RESET = %h", srst);
-	$display("ITEM = %h", item);
-	$display("ITEM COUNT = %h", count);
-	$display("ITEM COST = %h", cost);
-	$display("BUTTON PRESSED = %h", buttons);
-	$display("COINS = %h", coins);
-	$display("PREVIOUS AMOUNT = %h", prev_amount);
-	$display("AMOUNT = %h", amount);
-	$display("INSUFFICIENT AMOUNT = %h", insufficient_amount);
-	$display("SELECT = %h", select);
-	$display("PRODUCT = %h", product);
-	$display("INFO = %h", info);
-	$display("STATUS = %h", status);
-	$display("BALANCE = %h", balance);
+	$display("**********************TEST COUNT = %0d**************************", test_count);
+	$display("VALID = %0h", valid);
+	$display("SOFT RESET = %0h", srst);
+	$display("ITEM = %0d", item);
+	$display("ITEM COUNT = %0d", count);
+	$display("ITEM COST = %0d", cost);
+	$display("BUTTON PRESSED = %0h", buttons);
+	$display("COINS = %0d", coins);
+	$display("PREVIOUS AMOUNT = %0d", prev_amount);
+	$display("AMOUNT = %0d", amount);
+	$display("INSUFFICIENT AMOUNT = %0h", insufficient_amount);
+	$display("SELECT = %0h", select);
+	$display("PRODUCT = %0d", product);
+	$display("INFO = %0d", info);
+	$display("STATUS = %0h", status);
+	$display("BALANCE = %0d", balance);
 	$display("************************************************");
 endfunction : report_results
 
 function void print_count();
-	$display("WATER COUNT = %h", WATER_COUNT);
-	$display("COLA COUNT = %h", COLA_COUNT);
-	$display("PEPSI COUNT = %h", PEPSI_COUNT);
-	$display("FANTA COUNT = %h", FANTA_COUNT);
-	$display("COFFEE COUNT = %h", COFFEE_COUNT);
-	$display("BARS COUNT = %h", BARS_COUNT);
-	$display("CHIPS COUNT = %h", CHIPS_COUNT);
+	$display("*****************PRINTING ITEM COUNT*******************************");
+	$display("WATER COUNT = %0d", WATER_COUNT);
+	$display("COLA COUNT = %0d", COLA_COUNT);
+	$display("PEPSI COUNT = %0d", PEPSI_COUNT);
+	$display("FANTA COUNT = %0d", FANTA_COUNT);
+	$display("COFFEE COUNT = %0d", COFFEE_COUNT);
+	$display("BARS COUNT = %0d", BARS_COUNT);
+	$display("CHIPS COUNT = %0d", CHIPS_COUNT);
+	$display("************************************************");
 endfunction : print_count
+
 function void print_cost();
-	$display("WATER COST = %h", COST_OF_WATER);
-	$display("COLA COST = %h", COST_OF_COLA);
-	$display("PEPSI COST = %h", COST_OF_PEPSI);
-	$display("FANTA COST = %h", COST_OF_FANTA);
-	$display("COFFEE COST = %h", COST_OF_COFFEE);
-	$display("BARS COST = %h", COST_OF_BARS);
-	$display("CHIPS COST = %h", COST_OF_CHIPS);
+	$display("*****************PRINTING ITEM COST*******************************");
+	$display("WATER COST = %0d", COST_OF_WATER);
+	$display("COLA COST = %0d", COST_OF_COLA);
+	$display("PEPSI COST = %0d", COST_OF_PEPSI);
+	$display("FANTA COST = %0d", COST_OF_FANTA);
+	$display("COFFEE COST = %0d", COST_OF_COFFEE);
+	$display("BARS COST = %0d", COST_OF_BARS);
+	$display("CHIPS COST = %0d", COST_OF_CHIPS);
+	$display("************************************************");
 endfunction : print_cost
 
 // configure design before generating stimulus
-
-// configure design before generating stimulus
 function void configure();
-  //covergroup new function called - covergroup created
-  //cov.cov_new();
- 
   // default item count
-  //= '0;
   WATER_COUNT = 0;
   COLA_COUNT = 0;
   PEPSI_COUNT = 0;
@@ -132,23 +126,20 @@ endfunction : configure
 
 // TODO: task to check_results
 
-
 // insert coins task
 task add_coins();
-  static int loop = $urandom_range(1,51); // 51*5 = 255 which is the max value
-$display("*Inside add coins with loop = %d*", loop);
+  static int loop = $urandom_range(1,25); // number of times the user can insert a coin 
+//$display("*Inside add coins with loop = %d*", loop);
   repeat(loop) begin
   	coins = $urandom_range(1,3);
   	@(negedge clk);
-	$display("AMOUNT = %d", amount);
   end
 endtask : add_coins
 
 function int get_cost();
 	// logic to generate random cost to be a multiple of 5
 	static int temp = $urandom_range(0,255);
-	//vif.cost -= temp % 5;
-	return (temp % 5);
+	return (temp - (temp % 5));
 endfunction : get_cost
 
 endinterface
