@@ -1,6 +1,6 @@
 `include"vm2002_pkg.svh"
 module vm2002_cov(vm2002_if vif);
-
+int cov;
 // import package
 import vm2002_common_pkg::*;
 
@@ -48,7 +48,7 @@ VALID_CP:coverpoint vif.valid{
 //item, count cost bins								
 ITEM_CP:coverpoint vif.item{
 				option.at_least = 10;
-				bins items = {[WATER:BARS]};
+				bins items[] = {[WATER:BARS]};
 				bins NO_ITEM = {3'h0};	
 							}
 							
@@ -63,26 +63,27 @@ COST_CP:coverpoint vif.cost{
 				bins low = {[0:127]};
 				bins high= {[127:255]};
 							}
-			/*				
+			/*			
 //valid then item select then cost or count transition bin		
 VALID_ITEM_CP:coverpoint valid_item_cost_count{
 				option.at_least = 5;
 				bins valid_item[] = {vif.valid = 1 => vif.item = [WATER:BARS] => (vif.cost = [0:255] || IF.count = [0:15] };
 							}							
-		
+*/		
 //item count cross coverage
-ITEM_COUNT_CROSS_CP: cross ITEM_CP,COUNT_CP{
-								bins item_low_cross		=	{	binsof(ITEM_CP.items) intersect binsof(COUNT_CP.low)};
-								bins item_high_cross		=	{	binsof(ITEM_CP.items) intersect binsof(COUNT_CP.high)};		
-								}			
-*/
+ITEM_COUNT_CROSS_CP: cross ITEM_CP,COUNT_CP;
+											
+
 endgroup
 
-// COVERAGE instantiation and sample
+// COVERAGE instantiation and sampl
+vm2002_cg cg= new();
 initial begin
-	vm2002_cg cg;
-	cg = new();
-  	while(cg.get_coverage() < 100) cg.sample();
-end
 
+repeat(10000)@(posedge vif.clk)begin
+cg.sample;
+cov = cg.get_coverage;
+if(cov > 90) cg.stop;
+end
+end 
 endmodule
