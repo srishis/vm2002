@@ -1,292 +1,277 @@
 
-// RTL Design for vm2002 for Assignment 1
+// RTL Design for vm2002 
 
 `include "vm2002_pkg.svh"
-module vm2002(product, status, balance, info, clk, hrst, srst, coins, buttons, select, item, count, cost, valid);
-
-input clk, hrst, srst;
-
-// user interface inputs
-input [1:0] coins; 
-input [2:0] buttons; 
-input select; 
-
-// supplier interface inputs
-input [2:0] item;
-input [3:0] count;
-input [7:0] cost;
-input valid;
-
-// output interface
-output logic [2:0] product;
-output logic [1:0] status;
-output logic [15:0] balance;
-output logic [7:0] info;
+module vm2002(vm2002_if pif);
 
 import vm2002_common_pkg::*;
 
-// internal variables
-// this variable holds the total amount inserted by the user through coins
-logic amount;
-logic insert_coins;
-logic [8:0] timer;				// 9 bit down counter which counts 512 clocks
-logic start_timer;				// control signal for internal timer	
-logic [15:0] prev_balance;
-logic [15:0] prev_amount;
-logic insufficient_amount;
-
 fsm_state_t state, next_state;
-item_count_struct_t item_reg;
-cost_struct_t cost_reg;
+//item_count_struct_t 
+//cost_struct_t 
+
 coins_t coin;
 buttons_t button;
 item_t items;
 status_t stat;
 
 always_comb begin
-$cast(coin, coins);
-$cast(button, buttons);
-$cast(items, item);
-$cast(stat, status);
+  $cast(pif.status, stat);
+  // cast signals to enum for readability
+  coin =  coins_t'(pif.coins);
+  button =  buttons_t'(pif.buttons);
+  items =  item_t'(pif.item);
 end
 
+
 // initial condition
-  always_ff@(posedge clk) begin
-  if(hrst) begin state        <= IDLE;
-  	         timer        <= '1;		// set timer to max value for down count
+  always_ff@(posedge pif.clk) begin
+  if(pif.hrst) begin state       <= IDLE;
+		 pif.configure();
 		 //prev_balance <= '0;
   end
-  else begin state        <= next_state;
-  	     timer        <= timer;		
-	     //prev_balance <= prev_balance;
-  end
+  else state        <= next_state;
   end // always_ff block for  initial condition 
 
   // add soft reset logic to restore previous balance
-  always@(srst) begin
-  //prev_balance <= balance;
-  prev_amount  <= amount;
+  always@(posedge pif.srst, posedge pif.insufficient_amount) begin
+  pif.prev_amount  = pif.amount;
   end
 
 
-// watchdog timer logic using down counter
-  assign timeout = (timer == '0) ? 1 : 0;
-  always_ff@(posedge clk) begin
-  if(start_timer) timer <= timer - 1'b1;
-  else		  timer <= '1;
+// watchdog timer logic using down pif.counter
+  assign vif.timeout = (pif.timer == '0) ? 1 : 0;
+  always_ff@(posedge pif.clk) begin
+  if(pif.start_timer) pif.timer <= pif.timer - 1'b1;
+  else		      pif.timer <= '1;
   end
 
 // FSM output logic
   always_comb begin
     // default value for outputs and internal variables for each state
-    {product, status, info, balance, amount, insert_coins, insufficient_amount} = '0;
+    {pif.product, stat, pif.info, pif.insert_coins, pif.insufficient_amount, pif.start_timer} = '0;
     
     unique case (1'b1) 	// reverse case
-  	state[IDLE_INDEX] 	      : begin  end
-
-  	state[CHECK_ITEM_COUNT_INDEX] : begin 
-  					//if(button == A)	// WATER
-  					unique case (button)	// reverse case
-  					 A:	begin
-  						if(item_reg.WATER_COUNT != 0) begin
-  						status = AVAILABE;
-						info = cost_reg.COST_OF_WATER;
-						end
-  						else
-  						status = OUT_OF_STOCK;
-  						end
-  					//if(button == B)	// COLA
-  					 B:	begin
-  						if(item_reg.COLA_COUNT != 0) begin
-  						status = AVAILABE;
-						info = cost_reg.COST_OF_COLA;
-						end
-  						else
-  						status = OUT_OF_STOCK;
-  						end
-  					//if(button == C)	// PEPSI
-  					 C:	begin
-  						if(item_reg.PEPSI_COUNT != 0) begin
-  						status = AVAILABE;
-						info = cost_reg.COST_OF_PEPSI;
-						end
-  						else
-  						status = OUT_OF_STOCK;
-  						end
-  					//if(button == D)	// FANTA
-  					 D:	begin
-  						if(item_reg.FANTA_COUNT != 0) begin
-  						status = AVAILABE;
-						info = cost_reg.COST_OF_FANTA;
-						end
-  						else
-  						status = OUT_OF_STOCK;
-  						end
-  					//if(button == E)	// COFFEE
-  					 E:	begin
-  						if(item_reg.COFFEE_COUNT != 0) begin
-  						status = AVAILABE;
-						info = cost_reg.COST_OF_COFFEE;
-						end
-  						else
-  						status = OUT_OF_STOCK;
-  						end
-  					//if(button == F)	// CHIPS
-  					 F:	begin
-  						if(item_reg.CHIPS_COUNT != 0) begin
-  						status = AVAILABE;
-						info = cost_reg.COST_OF_CHIPS;
-						end
-  						else
-  						status = OUT_OF_STOCK;
-  						end
-  					//if(button == G)	// BARS
-  					 G:	begin
-  						if(item_reg.BARS_COUNT != 0) begin
-  						status = AVAILABE;
-						info = cost_reg.COST_OF_BARS;
-						end
-  						else
-  						status = OUT_OF_STOCK;
-  						end
-  				
-  					
-  					endcase
-  
-  					insert_coins = 1'b1;
-  					end 
-  
-  	state[INSERT_COINS_INDEX]     : begin 
-  				    	//if(!cancel)
-  				    	start_timer = 1'b1;
-					//while(!select) begin	
-					if(coin == NICKEL)	        amount += prev_amount + 16'h5;	// $0.05
-					else if (coin == DIME)		amount += prev_amount + 16'hA;	// $0.10		
-					else if (coin == QUARTER)	amount += prev_amount + 16'h19;	// $0.25
-					else				amount  = prev_amount + amount;			
-					//else amount = 0;			
-					// make insert coins control signal low
-					balance = '0;
-					
+  	state[IDLE_INDEX] 	      : begin  
+					pif.amount = '0;
+					pif.balance = '0;
 					end
-					  
-  
-  	// compare cost with amount inserted by user and compute balance 
-  	state[CHECK_BALANCE]          : begin 
-  				    	start_timer = 1'b0;
-  					if(button == A)	// WATER
-  					  if(amount > cost_reg.COST_OF_WATER)	        balance = amount - cost_reg.COST_OF_WATER;
-  					  else if(amount < cost_reg.COST_OF_WATER)      insufficient_amount = 1'b1;
-  					  else 					        balance = 0;
-  					else if(button == B)	// COLA
-  					  if(amount > cost_reg.COST_OF_COLA)	        balance = amount - cost_reg.COST_OF_COLA;
-  					  else if(amount < cost_reg.COST_OF_COLA)       insufficient_amount = 1'b1;
-  					  else 					        balance = 0;
-  					else if(button == C)	// PEPSI
-  					  if(amount > cost_reg.COST_OF_PEPSI)	        balance = amount - cost_reg.COST_OF_PEPSI;
-  					  else if (amount < cost_reg.COST_OF_PEPSI)	insufficient_amount = 1'b1;
-  					  else 					        balance = 0;
-  					else if(button == D)	// FANTA
-  					  if(amount > cost_reg.COST_OF_FANTA)	        balance = amount - cost_reg.COST_OF_FANTA;
-  					  else if (amount < cost_reg.COST_OF_FANTA)	insufficient_amount = 1'b1;
-  					  else 					        balance = 0;
-  					else if(button == E)	// COFFEE
-  					  if(amount > cost_reg.COST_OF_COFFEE)	        balance = amount - cost_reg.COST_OF_COFFEE;
-  					  else if (amount < cost_reg.COST_OF_COFFEE)	insufficient_amount = 1'b1;
-  					  else 					        balance = 0;
-  					else if(button == F)	// CHIPS
-  					  if(amount > cost_reg.COST_OF_CHIPS)	        balance = amount - cost_reg.COST_OF_CHIPS;
-  					  else if (amount < cost_reg.COST_OF_CHIPS)	insufficient_amount = 1'b1;
-  					  else 					        balance = 0;
-  					else if(button == G)	// BARS
-  					  if(amount > cost_reg.COST_OF_BARS)	        balance = amount - cost_reg.COST_OF_BARS;
-  					  else if (amount < cost_reg.COST_OF_BARS)	insufficient_amount = 1'b1;
-  					  else 					        balance = 0;
-  			
-  					end
-  
-          state[RESTOCK_INDEX]	      : begin
+
+	 state[RESTOCK_INDEX]	      : begin
+  				    	pif.amount = '0;
+  				    	pif.balance = '0;
   					  // update the stock
   					  unique case(items)
   						WATER: 	begin	
-  							  if(item_reg.WATER_COUNT + count > 5'h10)	stat = ERROR;
-  							  else 						item_reg.WATER_COUNT = item_reg.WATER_COUNT + count;
+  							  if(WATER_COUNT + pif.count > 5'h10)	stat = ERROR;
+  							  else 						WATER_COUNT = WATER_COUNT + pif.count; 
   							end
   						COLA:	begin	
-  							  if(item_reg.COLA_COUNT + count > 5'h10)	stat = ERROR;
-  							  else 						item_reg.COLA_COUNT = item_reg.COLA_COUNT + count;
+  							  if(COLA_COUNT + pif.count > 5'h10)	stat = ERROR;
+  							  else 						COLA_COUNT = COLA_COUNT + pif.count;
   							end
   						PEPSI:	begin	
-  							  if(item_reg.PEPSI_COUNT + count > 5'h10)	stat = ERROR;
-  						       	  else 						item_reg.PEPSI_COUNT = item_reg.PEPSI_COUNT + count;
+  							  if(PEPSI_COUNT + pif.count > 5'h10)	stat = ERROR;
+  						       	  else 						PEPSI_COUNT = PEPSI_COUNT + pif.count;
   							end
   						FANTA:  begin
-  							  if(item_reg.FANTA_COUNT + count > 5'h10)	stat = ERROR;
-  							  else 						item_reg.FANTA_COUNT = item_reg.FANTA_COUNT + count;
+  							  if(FANTA_COUNT + pif.count > 5'h10)	stat = ERROR;
+  							  else 						FANTA_COUNT = FANTA_COUNT + pif.count;
   							end
   						COFFEE:	begin	
-  							  if(item_reg.COFFEE_COUNT + count > 5'h10)	stat = ERROR;
-  							  else 						item_reg.COFFEE_COUNT = item_reg.COFFEE_COUNT + count;
+  							  if(COFFEE_COUNT + pif.count > 5'h10)	stat = ERROR;
+  							  else 						COFFEE_COUNT = COFFEE_COUNT + pif.count;
   							end
   						CHIPS:	begin	
-  							  if(item_reg.CHIPS_COUNT + count > 5'h10)	stat = ERROR;
-  							  else 						item_reg.CHIPS_COUNT = item_reg.CHIPS_COUNT + count;
+  							  if(CHIPS_COUNT + pif.count > 5'h10)	stat = ERROR;
+  							  else 						CHIPS_COUNT = CHIPS_COUNT + pif.count;
   							end
   						BARS:	begin	
-  							  if(item_reg.BARS_COUNT + count > 5'h10)	stat = ERROR;
-  							  else 						item_reg.BARS_COUNT = item_reg.BARS_COUNT + count;
+  							  if(BARS_COUNT + pif.count > 5'h10)	stat = ERROR;
+  							  else 						BARS_COUNT = BARS_COUNT + pif.count;
   							end
-  					
   					  endcase
   					// update the cost of items
-  					if(cost)
+  					if(pif.cost)
   					  unique case(items)
-  						WATER : cost_reg.COST_OF_WATER  = cost;	
+  						WATER : COST_OF_WATER  = pif.cost;	
   					
-  						COLA  :	cost_reg.COST_OF_COLA   = cost;		
+  						COLA  :	COST_OF_COLA   = pif.cost;		
   					
-  						PEPSI :	cost_reg.COST_OF_PEPSI  = cost;	
+  						PEPSI :	COST_OF_PEPSI  = pif.cost;	
   					
-  						FANTA :	cost_reg.COST_OF_FANTA  = cost;	
+  						FANTA :	COST_OF_FANTA  = pif.cost;	
   					
-  						COFFEE:	cost_reg.COST_OF_COFFEE = cost;		
+  						COFFEE:	COST_OF_COFFEE = pif.cost;		
   					
-  						CHIPS :	cost_reg.COST_OF_CHIPS  = cost;		
+  						CHIPS :	COST_OF_CHIPS  = pif.cost;		
   			
-  						BARS  :	cost_reg.COST_OF_BARS   = cost;	
+  						BARS  :	COST_OF_BARS   = pif.cost;	
   			
-  							
   					  endcase
   					else begin
-  					  cost_reg.COST_OF_WATER  = cost_reg.COST_OF_WATER;						
-  					  cost_reg.COST_OF_COLA   = cost_reg.COST_OF_COLA ;							
-  					  cost_reg.COST_OF_PEPSI  = cost_reg.COST_OF_PEPSI;						
-  					  cost_reg.COST_OF_FANTA  = cost_reg.COST_OF_FANTA;
-  					  cost_reg.COST_OF_COFFEE = cost_reg.COST_OF_COFFEE;						
-  					  cost_reg.COST_OF_CHIPS  = cost_reg.COST_OF_CHIPS;					
-  					  cost_reg.COST_OF_BARS   = cost_reg.COST_OF_BARS;				
-  					 
+  					  COST_OF_WATER  = COST_OF_WATER;						
+  					  COST_OF_COLA   = COST_OF_COLA ;							
+  					  COST_OF_PEPSI  = COST_OF_PEPSI;						
+  					  COST_OF_FANTA  = COST_OF_FANTA;
+  					  COST_OF_COFFEE = COST_OF_COFFEE;						
+  					  COST_OF_CHIPS  = COST_OF_CHIPS;					
+  					  COST_OF_BARS   = COST_OF_BARS;				
   					end
   					end	// end of RESTOCK case
-  				
+
+  	state[CHECK_ITEM_COUNT_INDEX] : begin 
+					pif.amount = '0;
+					pif.balance = '0;
+  					//if(button == A)	// WATER
+  					unique case (pif.buttons)	// reverse case
+  					 A:	begin
+  						if(WATER_COUNT != 0) begin
+  						stat = AVAILABLE;
+						pif.info = COST_OF_WATER;
+						end
+  						else
+  						stat = OUT_OF_STOCK;
+  						end
+  					//if(button == B)	// COLA
+  					 B:	begin
+  						if(COLA_COUNT != 0) begin
+  						stat = AVAILABLE;
+						pif.info = COST_OF_COLA;
+						end
+  						else
+  						stat = OUT_OF_STOCK;
+  						end
+  					//if(button == C)	// PEPSI
+  					 C:	begin
+  						if(PEPSI_COUNT != 0) begin
+  						stat = AVAILABLE;
+						pif.info = COST_OF_PEPSI;
+						end
+  						else
+  						stat = OUT_OF_STOCK;
+  						end
+  					//if(button == D)	// FANTA
+  					 D:	begin
+  						if(FANTA_COUNT != 0) begin
+  						stat = AVAILABLE;
+						pif.info = COST_OF_FANTA;
+						end
+  						else
+  						stat = OUT_OF_STOCK;
+  						end
+  					//if(button == E)	// COFFEE
+  					 E:	begin
+  						if(COFFEE_COUNT != 0) begin
+  						stat = AVAILABLE;
+						pif.info = COST_OF_COFFEE;
+						end
+  						else
+  						stat = OUT_OF_STOCK;
+  						end
+  					//if(button == F)	// CHIPS
+  					 F:	begin
+  						if(CHIPS_COUNT != 0) begin
+  						stat = AVAILABLE;
+						pif.info = COST_OF_CHIPS;
+						end
+  						else
+  						stat = OUT_OF_STOCK;
+  						end
+  					//if(button == G)	// BARS
+  					 G:	begin
+  						if(BARS_COUNT != 0) begin
+  						stat = AVAILABLE;
+						pif.info = COST_OF_BARS;
+						end
+  						else
+  						stat = OUT_OF_STOCK;
+  						end
+  					endcase
+  
+  					pif.insert_coins = 1'b1;
+  				    	//pif.start_timer = 1'b1;
+  					end 
+  
+  	state[INSERT_COINS_INDEX]     : begin 
+					//pif.balance = '0;
+  				    	pif.start_timer = 1'b1;
+  				    	//if(pif.start_timer == 1'b1) begin
+					if(coin == NICKEL)	        pif.amount += pif.prev_amount + 16'h5;	// $0.05
+					else if (coin == DIME)		pif.amount += pif.prev_amount + 16'hA;	// $0.10		
+					else if (coin == QUARTER)	pif.amount += pif.prev_amount + 16'h19;	// $0.25
+					else				pif.amount  = pif.amount;			
+					end
+					//end
+					  
+  
+  	// compare cost with amount inserted by user and compute pif.balance 
+  	state[CHECK_BALANCE_INDEX]          : begin 
+  				    	pif.start_timer = 1'b0;
+  					if(button == A)	// WATER
+  					  if(pif.amount > COST_OF_WATER)	pif.balance = pif.amount - COST_OF_WATER;
+  					  else if(pif.amount < COST_OF_WATER)  begin
+						pif.insufficient_amount = 1'b1;
+					  end
+  					  else 					        pif.balance = 0;
+  					else if(button == B)	// COLA
+  					  if(pif.amount > COST_OF_COLA)	pif.balance = pif.amount - COST_OF_COLA;
+  					  else if(pif.amount < COST_OF_COLA)   begin 
+						pif.insufficient_amount = 1'b1;
+					  end
+  					  else 					        pif.balance = 0;
+  					else if(button == C)	// PEPSI
+  					  if(pif.amount > COST_OF_PEPSI)	pif.balance = pif.amount - COST_OF_PEPSI;
+  					  else if (pif.amount < COST_OF_PEPSI) begin	
+						pif.insufficient_amount = 1'b1;
+					  end
+  					  else 					        pif.balance = 0;
+  					else if(button == D)	// FANTA
+  					  if(pif.amount > COST_OF_FANTA)	pif.balance = pif.amount - COST_OF_FANTA;
+  					  else if (pif.amount < COST_OF_FANTA) begin	
+						pif.insufficient_amount = 1'b1;
+					  end
+  					  else 					        pif.balance = 0;
+  					else if(button == E)	// COFFEE
+  					  if(pif.amount > COST_OF_COFFEE)	pif.balance = pif.amount - COST_OF_COFFEE;
+  					  else if (pif.amount < COST_OF_COFFEE) begin
+						pif.insufficient_amount = 1'b1;
+					  end
+  					  else 					        pif.balance = 0;
+  					else if(button == F)	// CHIPS
+  					  if(pif.amount > COST_OF_CHIPS)	pif.balance = pif.amount - COST_OF_CHIPS;
+  					  else if (pif.amount < COST_OF_CHIPS) begin	
+						pif.insufficient_amount = 1'b1;
+					  end
+  					  else 					        pif.balance = 0;
+  					else if(button == G)	// BARS
+  					  if(pif.amount > COST_OF_BARS)	pif.balance = pif.amount - COST_OF_BARS;
+  					  else if (pif.amount < COST_OF_BARS) begin	
+						pif.insufficient_amount = 1'b1;
+					  end
+  					  else 					        pif.balance = 0;
+					//$display("************Balance = %0d**************", pif.balance);
+					end
+					
+  
+           				
   	state[DISPENSE_ITEM_INDEX]  : begin 
-  	 				//product = item;
+  				    	pif.amount = '0;
   	 				unique case(button)
-  						A : 	begin product  = WATER;   item_reg.WATER_COUNT  = item_reg.WATER_COUNT - 1'b1; end	
+  						A : 	begin pif.product  = WATER;   WATER_COUNT  = WATER_COUNT - 1'b1; end	
   					
-  						B :	begin product  = COLA;	  item_reg.COLA_COUNT   = item_reg.COLA_COUNT - 1'b1; end	
+  						B :	begin pif.product  = COLA;  COLA_COUNT   = COLA_COUNT - 1'b1; end	
   					
-  						C :	begin product  = PEPSI;   item_reg.PEPSI_COUNT  = item_reg.PEPSI_COUNT - 1'b1; end	
+  						C :	begin pif.product  = PEPSI;   PEPSI_COUNT  = PEPSI_COUNT - 1'b1; end	
   					
-  						D :	begin product  = FANTA;   item_reg.FANTA_COUNT  = item_reg.FANTA_COUNT - 1'b1; end	
+  						D :	begin pif.product  = FANTA;   FANTA_COUNT  = FANTA_COUNT - 1'b1; end	
   					
-  						E :	begin product  = COFFEE;  item_reg.COFFEE_COUNT = item_reg.COFFEE_COUNT - 1'b1; end		
+  						E :	begin pif.product  = COFFEE;  COFFEE_COUNT = COFFEE_COUNT - 1'b1; end		
   					
-  						F :	begin product  = CHIPS;	  item_reg.CHIPS_COUNT  = item_reg.CHIPS_COUNT - 1'b1; end	
+  						F :	begin pif.product  = CHIPS;  CHIPS_COUNT  = CHIPS_COUNT - 1'b1; end	
   			
-  						G :	begin product  = BARS;    item_reg.BARS_COUNT   = item_reg.BARS_COUNT - 1'b1; end	
+  						G :	begin pif.product  = BARS;    BARS_COUNT   = BARS_COUNT - 1'b1; end	
   			
-  						//H:	begin product  = COOKIE;	
   					  endcase	
   				      end	
   
@@ -302,39 +287,39 @@ end
   	unique case(1'b1)	// reverse case
   	
   	state[IDLE_INDEX]             : begin 
-					// if supplier press valid, enter in RESTOCK state
-  			                if(valid)			 	next_state = RESTOCK;
-					// if no valid or buttons are pressed, stay in this state
-  			                else if (!valid && !buttons || srst) 	next_state = IDLE;
-					// if no valid and user presses a button, go to CHECK_ITEM_COUNT state
-  			                else if (!valid && buttons)		next_state = CHECK_ITEM_COUNT;
+					// if supplier press pif.valid, enter in RESTOCK state
+  			                if(pif.valid)			 	next_state = RESTOCK;
+					// if no pif.valid or button are pressed, stay in this state
+  			                else if (!pif.valid && !button || pif.srst) 	next_state = IDLE;
+					// if no pif.valid and user presses a button, go to CHECK_ITEM_COUNT state
+  			                else if (!pif.valid && button)		next_state = CHECK_ITEM_COUNT;
   			                end
   
   	state[CHECK_ITEM_COUNT_INDEX] : begin 
-					// if insert coins is asserted and status indicates requested item is available, go to INSERT_COINS state. 
-  					if(insert_coins && stat == AVAILABE)		next_state = INSERT_COINS;
-					// if insert coins is deasserted and status indicates requested item is available, stay in this state. 
-  					else if(!insert_coins && stat == AVAILABE)	next_state = CHECK_ITEM_COUNT;
-  					// if status indicates the requested item is not available, go back to IDLE state
-  					else if (stat != AVAILABE || srst)		next_state = IDLE;
+					// if insert pif.coins is asserted and stat indicates requested pif.item is available, go to INSERT_COINS state. 
+  					if(pif.insert_coins)		next_state = INSERT_COINS;
+					// if insert pif.coins is deasserted and stat indicates requested pif.item is available, stay in this state. 
+  					else if(!pif.insert_coins && stat == AVAILABLE)	next_state = CHECK_ITEM_COUNT;
+  					// if stat indicates the requested pif.item is not available, go back to IDLE state
+  					else if (stat != AVAILABLE || pif.srst)		next_state = IDLE;
   					end
   
   	state[INSERT_COINS_INDEX]     : begin 
-  					if(select)			 	       	 	next_state = CHECK_BALANCE;
-  					// wait for user to insert coins and then press select till timeout
-  					else if(!select && !timeout)			 	next_state = INSERT_COINS;
-  					// if no coins are inserted or user doesn't press select and timeout occurs, go back to IDLE
-  					else if(!select && timeout || stat == ERROR || srst)    next_state = IDLE;
+  					if(pif.select)			 	       	 	next_state = CHECK_BALANCE;
+  					// wait for user to insert pif.coins and then press pif.select till timeout
+  					else if(!pif.select && !vif.timeout)			 	next_state = INSERT_COINS;
+  					// if no pif.coins are inserted or user doesn't press pif.select and timeout occurs, go back to IDLE
+  					else if(!pif.select && vif.timeout || stat == ERROR || pif.srst)    next_state = IDLE;
   					end
   
-  	state[CHECK_BALANCE]          : begin 
-  					if(stat == ERROR || srst)	next_state = IDLE;
-  					else if(insufficient_amount)	next_state = INSERT_COINS;
+  	state[CHECK_BALANCE_INDEX]          : begin 
+  					if(stat == ERROR || pif.srst)	next_state = IDLE;
+  					else if(pif.insufficient_amount)	next_state = INSERT_COINS;
   					else 				next_state = DISPENSE_ITEM;
   					end
   
        state[RESTOCK_INDEX]	      : begin
-  					if(!valid)	next_state = IDLE;
+  					if(!pif.valid)	next_state = IDLE;
   					else		next_state = RESTOCK;
   					end
   	
@@ -342,8 +327,7 @@ end
   					next_state = IDLE;
   					end
 
- 
-          endcase
+      endcase
   
   end // FSM Next state logic
 
